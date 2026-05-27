@@ -74,6 +74,7 @@ const glass: React.CSSProperties = {
 
 // ── Desktop top navbar ───────────────────────────────────────────────────────
 function TopNav({ tab, setTab }: NavbarProps) {
+  const account = useCurrentAccount()
   const pillRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
 
@@ -117,7 +118,7 @@ function TopNav({ tab, setTab }: NavbarProps) {
           fontSize: 14, fontWeight: 500, letterSpacing: '0.06em',
           color: '#e8eaf6', fontFamily: 'Georgia, serif',
         }}>
-          APPNAME
+          Scam Crusher
         </span>
       </div>
 
@@ -180,8 +181,24 @@ function TopNav({ tab, setTab }: NavbarProps) {
       </ul>
 
       {/* Wallet — desktop */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <ConnectButton />
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        {/* Real button hidden but clickable on top */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 2, opacity: 0, cursor: 'pointer' }}>
+          <ConnectButton />
+        </div>
+        {/* Styled pill underneath */}
+        <div style={{
+          fontSize: 10, letterSpacing: '0.15em',
+          color: account ? '#7ab3ff' : '#4a6fa5',
+          background: account ? 'rgba(74,158,255,0.1)' : 'rgba(74,111,165,0.08)',
+          border: account ? '0.5px solid rgba(74,158,255,0.35)' : '0.5px solid rgba(74,111,165,0.25)',
+          borderRadius: 99, padding: '5px 14px',
+          fontFamily: 'Georgia, serif',
+          cursor: 'pointer',
+          whiteSpace: 'nowrap',
+        }}>
+          {account ? `${account.address.slice(0, 6)}...${account.address.slice(-4)}` : 'CONNECT'}
+        </div>
       </div>
     </nav>
   )

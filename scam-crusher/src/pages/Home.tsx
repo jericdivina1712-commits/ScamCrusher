@@ -148,8 +148,8 @@ export default function Home() {
                 flex: 1, padding: '14px 8px', textAlign: 'center',
                 borderRight: i < 2 ? '1px solid rgba(74,158,255,0.15)' : 'none',
               }}>
-                <div style={{ fontSize: 18, fontWeight: 'bold', color: '#fff' }}>{val}</div>
-                <div style={{ fontSize: 9, letterSpacing: 2, color: '#4a9eff', marginTop: 3 }}>{label}</div>
+                <div style={{ fontSize: 16, fontWeight: 'bold', color: '#fff', whiteSpace: 'nowrap' }}>{val}</div>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: '#4a9eff', marginTop: 3, whiteSpace: 'nowrap' }}>{label}</div>
               </div>
             ))}
           </div>
