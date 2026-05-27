@@ -37,6 +37,7 @@ export default function App() {
   const [lbLoading, setLbLoading] = useState(false)
   const [siteActive] = useState<boolean>(true)
   const [objectPage, setObjectPage] = useState(0)
+  const [nftPage, setNftPage] = useState(0)
   const [, setBgLoaded] = useState(false)
 
   const loadLeaderboard = async () => {
@@ -421,9 +422,14 @@ export default function App() {
           crushFee={crushFee}
           loading={loading}
           loadAssets={loadAssets}
-          status={crusherStatus}
+          status={status}
+
           objectPage={objectPage}
           setObjectPage={setObjectPage}
+
+          nftPage={nftPage}
+          setNftPage={setNftPage}
+
           getImage={getImage}
         />
       )}

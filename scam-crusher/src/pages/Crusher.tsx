@@ -12,8 +12,13 @@ type CrusherProps = {
   loading: boolean
   loadAssets: () => void
   status: string
+
   objectPage: number
   setObjectPage: (fn: (p: number) => number) => void
+
+  nftPage: number
+  setNftPage: (fn: (p: number) => number) => void
+
   getImage: (obj: any) => string | null
 }
 
@@ -188,9 +193,26 @@ function NFTCard({
 }
 
 export default function Crusher({
-  account, nfts, objects, selectedTargets,
-  toggleTarget, crush, canCrush, siteActive: _siteActive, crushFee,
-  loading, loadAssets, status, objectPage, setObjectPage, getImage
+  account,
+  nfts,
+  objects,
+  selectedTargets,
+  toggleTarget,
+  crush,
+  canCrush,
+  siteActive: _siteActive,
+  crushFee,
+  loading,
+  loadAssets,
+  status,
+
+  objectPage,
+  setObjectPage,
+
+  nftPage,
+  setNftPage,
+
+  getImage
 }: CrusherProps) {
   if (!account) {
     return (
@@ -203,8 +225,21 @@ export default function Crusher({
     )
   }
 
-  const totalCrush = nfts.reduce((s: number, n: any) => s + Number(n.data.content?.fields?.crush_count ?? 0), 0)
-  const pageCount = Math.ceil(objects.length / 20)
+  const totalCrush = nfts.reduce(
+  (s: number, n: any) =>
+    s + Number(n.data.content?.fields?.crush_count ?? 0),
+  0
+)
+
+const pageCount = Math.ceil(objects.length / 20)
+
+const sortedNFTs = [...nfts].sort(
+  (a, b) =>
+    Number(b.data.content?.fields?.crush_count ?? 0) -
+    Number(a.data.content?.fields?.crush_count ?? 0)
+)
+
+const nftPageCount = Math.ceil(sortedNFTs.length / 2)
 
   return (
     <>
@@ -276,8 +311,67 @@ export default function Crusher({
           </p>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 12 }}>
-          {nfts.map((n: any) => {
+        {sortedNFTs.length > 2 && (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      marginBottom: 14,
+    }}
+  >
+    <button
+      onClick={() => setNftPage(p => Math.max(0, p - 1))}
+      disabled={nftPage === 0}
+      style={{
+        padding: '5px 14px',
+        background: 'rgba(255,255,255,0.05)',
+        color: nftPage === 0 ? '#2a4a7f' : '#7ab3ff',
+        border: '1px solid rgba(255,255,255,0.10)',
+        borderRadius: 6,
+        cursor: nftPage === 0 ? 'not-allowed' : 'pointer',
+      }}
+    >
+      {'‹'}
+    </button>
+
+    <span style={{ fontSize: 10, color: '#5a7399' }}>
+      {nftPage * 2 + 1}–
+      {Math.min(nftPage * 2 + 2, sortedNFTs.length)}
+      {' / '}
+      {sortedNFTs.length}
+    </span>
+
+    <button
+      onClick={() =>
+        setNftPage(p => Math.min(nftPageCount - 1, p + 1))
+      }
+      disabled={nftPage >= nftPageCount - 1}
+      style={{
+        padding: '5px 14px',
+        background: 'rgba(255,255,255,0.05)',
+        color:
+          nftPage >= nftPageCount - 1
+            ? '#2a4a7f'
+            : '#7ab3ff',
+        border: '1px solid rgba(255,255,255,0.10)',
+        borderRadius: 6,
+        cursor:
+          nftPage >= nftPageCount - 1
+            ? 'not-allowed'
+            : 'pointer',
+      }}
+    >
+      {'›'}
+    </button>
+  </div>
+)}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 12 }}>
+                    {sortedNFTs
+            .slice(nftPage * 2, nftPage * 2 + 2)
+            .map((n: any) => {
             const rarity = (n.data.content?.fields?.rarity ?? 'COMMON').toUpperCase()
             const serial = n.data.content?.fields?.serial
             const crushCount = n.data.content?.fields?.crush_count ?? 0
