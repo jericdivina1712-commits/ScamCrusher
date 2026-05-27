@@ -95,7 +95,6 @@ export default function App() {
   }
 
   const mint = async () => {
-    console.log('mint fired, account:', account)
     if (!account) return
     setMinting(true)
     setAssetsStatus('')
@@ -115,7 +114,6 @@ export default function App() {
       typeArguments: ['0x2::kiosk::Kiosk'],
       arguments: [kiosk],
     })
-    console.log('about to signAndExecute, tx:', tx)
     signAndExecute({ transaction: tx }, {
       onSuccess: async (r: any) => {
         setAssetsStatus(`MINTED ${mintCount} — ${r.digest}`)
@@ -150,7 +148,6 @@ export default function App() {
       ownedHasNext = res.hasNextPage
       ownedCursor = res.nextCursor ?? undefined
     }
-    console.log('total owned objects:', all.length)
 
     // Bug fix #1: filter by type, not hardcoded object ID
     const kioskCaps = all.filter(
@@ -180,7 +177,6 @@ export default function App() {
               ids: nftIds,
               options: { showContent: true, showDisplay: true, showType: true, showOwner: true },
             })
-            console.log('kiosk objects found:', objs.map((o:any) => o.data?.type))
             kioskNfts.push(
               ...objs
                 .filter((o: any) => o.data?.type?.includes('CrusherNFT'))
@@ -252,19 +248,13 @@ export default function App() {
     let commandIndex = 0
 
     for (const target of targetList) {
-      console.log(`--- Target: ${target.data.objectId} | type: ${target.data.type}`)
 
       // STEP 1:
       // Every NFT gets a point first
       for (const [kId, { kCapId, iv, nftIds }] of kioskGroups) {
-        console.log(
-          `  Kiosk: ${kId} | cap: ${kCapId} | iv: ${iv} | nftCount: ${nftIds.length}`
-        )
+
 
         for (const nftId of nftIds) {
-          console.log(
-            `  [cmd ${commandIndex}] record_point_in_kiosk — nftId: ${nftId}`
-          )
 
           tx.moveCall({
             target: `${PACKAGE_ID}::crusher::record_point_in_kiosk`,
@@ -302,14 +292,10 @@ export default function App() {
           tx.pure.u64(crushFee),
         ])
 
-        console.log(
-          `  [cmd ${commandIndex}] splitCoins for payment`
-        )
+    
         commandIndex++
 
-        console.log(
-          `  [cmd ${commandIndex}] delete_target_from_kiosk — nftId: ${nftIds[0]} | target: ${target.data.objectId}`
-        )
+        
 
         tx.moveCall({
           target: `${PACKAGE_ID}::crusher::delete_target_from_kiosk`,
@@ -346,8 +332,6 @@ export default function App() {
       }
     }
 
-    console.log('Total commands built:', commandIndex)
-    console.log('Full tx inputs:', JSON.stringify(tx, null, 2))
 
     await new Promise<void>(resolve => {
       signAndExecute({ transaction: tx }, {
