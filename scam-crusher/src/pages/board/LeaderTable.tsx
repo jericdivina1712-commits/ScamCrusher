@@ -174,24 +174,20 @@ export default function LeaderTable({ leaderboard, myAddr }: Props) {
                 #{rank}
               </span>
 
-              {/* Wallet */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
               <span style={{
                 fontSize: 12, color: '#e8f0ff', fontFamily: font,
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {sa(e.owner)}
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                {isMe && (
-                  <span style={{
-                    fontSize: 9, background: 'rgba(74,158,255,0.15)', color: '#4a9eff',
-                    padding: '2px 7px', borderRadius: 10, fontWeight: 600,
-                    letterSpacing: 1, fontFamily: font, flexShrink: 0,
-                  }}>You</span>
-                )}
-                
-              </div>
+              {isMe && (
+                <span style={{
+                  fontSize: 9, background: 'rgba(74,158,255,0.15)', color: '#4a9eff',
+                  padding: '2px 7px', borderRadius: 10, fontWeight: 600,
+                  letterSpacing: 1, fontFamily: font, flexShrink: 0,
+                }}>You</span>
+              )}
             </div>
 
               {/* Crush count */}

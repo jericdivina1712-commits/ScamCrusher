@@ -67,7 +67,7 @@ export default function Assets({
   }
 
   return (
-    <div style={{ fontFamily: ff, color: '#e8f0ff', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ fontFamily: ff, color: '#e8f0ff', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflowX: 'hidden', maxWidth: '100vw' }}>
 
       {/* ── PAGE TITLE ──────────────────────────────────────────────────── */}
       <div style={{
@@ -99,7 +99,7 @@ export default function Assets({
         </p>
         {/* decorative divider */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 16,
+          display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 16,
           maxWidth: 400, margin: '18px auto 0',
         }}>
           <div style={{ flex: 1, height: 0.5, background: 'linear-gradient(90deg, transparent, rgba(74,158,255,0.3))' }} />
@@ -127,7 +127,7 @@ export default function Assets({
         <div style={{
           flex: '0 0 auto',
           width: isMobile ? '100%' : 340,
-          maxWidth: isMobile ? 280 : '100%',
+          maxWidth: isMobile ? '100%' : '100%',
           margin: isMobile ? '0 auto' : 0,
           position: 'relative',
         }}>
