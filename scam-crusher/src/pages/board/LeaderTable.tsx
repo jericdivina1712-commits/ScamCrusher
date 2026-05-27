@@ -220,7 +220,13 @@ export default function LeaderTable({ leaderboard, myAddr }: Props) {
         </div>
       </div>
 
-      {modalOwner && <CrushModal owner={modalOwner} onClose={() => setModalOwner(null)} />}
+      {modalOwner && (
+  <CrushModal
+    owner={modalOwner}
+    totalCrushes={leaderboard.find(e => e.owner === modalOwner)?.total ?? null}
+    onClose={() => setModalOwner(null)}
+  />
+)}
     </>
   )
 }

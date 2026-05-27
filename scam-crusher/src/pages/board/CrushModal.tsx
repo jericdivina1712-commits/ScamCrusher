@@ -53,6 +53,7 @@ type EnrichedEntry = RawEntry & {
 
 type Props = {
   owner: string
+  totalCrushes: number | null
   onClose: () => void
 }
 
@@ -390,90 +391,100 @@ function SkeletonCard() {
     </div>
   )
 }
-
-export default function CrushModal({ owner, onClose }: Props) {
+export default function CrushModal({ owner, totalCrushes, onClose }: Props) {
   const client = useSuiClient()
   const [entries, setEntries] = useState<EnrichedEntry[]>([])
   const [loading, setLoading] = useState(true)
-  // track per-entry enrichment status separately so cards render as they enrich
   const [enrichCount, setEnrichCount] = useState(0)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
+  const [nextCursor, setNextCursor] = useState<any>(null)
+  const [cursorHistory, setCursorHistory] = useState<any[]>([])
+
+  const loadPage = async (cursor: any) => {
+    setLoading(true)
+    setEntries([])
+    setEnrichCount(0)
+
+    try {
+      const raw: RawEntry[] = []
+      let tempCursor = cursor
+      let fetched = 0
+
+      // keep fetching batches until we collect 10 entries for this owner
+      while (fetched < 10) {
+        const res: any = await client.queryEvents({
+          query: { MoveEventType: `${NFT_PACKAGE_ID}::crusher::CrushEvent` },
+          cursor: tempCursor,
+          limit: 50,
+        })
+
+        for (const ev of res.data) {
+          const j = ev.parsedJson as any
+          if (!j?.target_id || j.crusher !== owner) continue
+          raw.push({
+            target_id: j.target_id,
+            rarity: (j.rarity ?? 'COMMON').toUpperCase(),
+            crush_count: Number(j.crush_count),
+            timestamp: ev.timestampMs
+              ? new Date(Number(ev.timestampMs)).toISOString()
+              : new Date().toISOString(),
+            tx_digest: ev.id?.txDigest ?? '',
+            crusher_nft_id: j.nft_id ?? '',
+          })
+          fetched++
+          if (fetched >= 10) break
+        }
+
+        if (!res.hasNextPage) {
+          setHasMore(false)
+          setNextCursor(null)
+          break
+        }
+
+        if (fetched < 10) {
+          tempCursor = res.nextCursor
+        } else {
+          setHasMore(res.hasNextPage)
+          setNextCursor(res.nextCursor)
+        }
+      }
+
+      raw.reverse()
+
+      const seeded: EnrichedEntry[] = raw.map(r => ({
+        ...r,
+        image_url: null,
+        nft_name: null,
+        collection: null,
+        serial: null,
+        enriched: false,
+      }))
+      setEntries(seeded)
+      setLoading(false)
+
+      for (let i = 0; i < raw.length; i++) {
+        const r = raw[i]
+        if (!r.tx_digest) continue
+
+        const meta = await recoverBurnedNFT(client, r.target_id, r.tx_digest)
+
+        setEntries(prev => {
+          const next = [...prev]
+          next[i] = { ...next[i], ...meta, enriched: true }
+          return next
+        })
+        setEnrichCount(c => c + 1)
+      }
+    } catch (e) {
+      console.error(e)
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true)
-      setEntries([])
-      setEnrichCount(0)
-
-      try {
-        // ── Step 1: collect raw events ──────────────────────────────────────
-        const raw: RawEntry[] = []
-        let cursor: string | undefined = undefined
-        let hasNext = true
-
-        while (hasNext) {
-          const res: any = await client.queryEvents({
-            query: { MoveEventType: `${NFT_PACKAGE_ID}::crusher::CrushEvent` },
-            cursor: cursor as any,
-            limit: 50,
-          })
-
-          for (const ev of res.data) {
-            const j = ev.parsedJson as any
-            if (!j?.target_id || j.crusher !== owner) continue
-            raw.push({
-              target_id: j.target_id,
-              rarity: (j.rarity ?? 'COMMON').toUpperCase(),
-              crush_count: Number(j.crush_count),
-              timestamp: ev.timestampMs
-                ? new Date(Number(ev.timestampMs)).toISOString()
-                : new Date().toISOString(),
-              tx_digest: ev.id?.txDigest ?? '',
-              crusher_nft_id: j.nft_id ?? '',
-            })
-          }
-
-          hasNext = res.hasNextPage
-          cursor = res.nextCursor
-        }
-
-        // Most recent first
-        raw.reverse()
-
-        // ── Step 2: seed entries with un-enriched state, show cards immediately
-        const seeded: EnrichedEntry[] = raw.map(r => ({
-          ...r,
-          image_url: null,
-          nft_name: null,
-          collection: null,
-          serial: null,
-          enriched: false,
-        }))
-        setEntries(seeded)
-        setLoading(false)
-
-        // ── Step 3: enrich each entry one by one (non-blocking)
-        for (let i = 0; i < raw.length; i++) {
-          const r = raw[i]
-          if (!r.tx_digest) continue
-
-          const meta = await recoverBurnedNFT(client, r.target_id, r.tx_digest)
-
-          setEntries(prev => {
-            const next = [...prev]
-            next[i] = { ...next[i], ...meta, enriched: true }
-            return next
-          })
-          setEnrichCount(c => c + 1)
-        }
-      } catch (e) {
-        console.error(e)
-        setLoading(false)
-      }
-    }
-
-    load()
+    loadPage(null)
   }, [owner])
-
   return (
     <div
       onClick={onClose}
@@ -533,7 +544,11 @@ export default function CrushModal({ owner, onClose }: Props) {
             </p>
             {!loading && entries.length > 0 && (
               <p style={{ fontSize: 10, color: '#3a5070', margin: '4px 0 0', letterSpacing: 0.5 }}>
-                {entries.length} crush{entries.length !== 1 ? 'es' : ''} found
+                {totalCrushes !== null
+                  ? `${(page - 1) * 10 + 1}–${Math.min(page * 10, totalCrushes)} of ${totalCrushes} crushes`
+                  : hasMore
+                    ? `${(page - 1) * 10 + 1}–${page * 10}+ crushes`
+                    : `${(page - 1) * 10 + 1}–${(page - 1) * 10 + entries.length} crushes`}
                 {enrichCount < entries.length && (
                   <span style={{ color: '#4a9eff', marginLeft: 8 }}>
                     · loading metadata ({enrichCount}/{entries.length})
@@ -603,6 +618,78 @@ export default function CrushModal({ owner, onClose }: Props) {
             <CrushCard key={i} entry={entry} />
           ))}
         </div>
+
+        {/* Pagination */}
+        {!loading && (entries.length > 0 || page > 1) && (
+          <div
+            style={{
+              borderTop: '1px solid rgba(255,255,255,0.07)',
+              padding: '14px 20px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <button
+              onClick={() => {
+                const history = [...cursorHistory]
+                const prevCursor = history.length > 1 ? history[history.length - 2] : null
+                setCursorHistory(history.slice(0, -1))
+                setPage(p => p - 1)
+                loadPage(prevCursor)
+              }}
+              disabled={page === 1}
+              style={{
+                background: page === 1 ? 'transparent' : '#141f33',
+                border: '1px solid rgba(255,255,255,0.10)',
+                color: page === 1 ? '#2a3a50' : '#a8b8cc',
+                cursor: page === 1 ? 'default' : 'pointer',
+                padding: '7px 18px',
+                borderRadius: 8,
+                fontSize: 9,
+                fontFamily: font,
+                fontWeight: 700,
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+              }}
+            >
+              ← Prev
+            </button>
+
+            <span style={{ fontSize: 10, color: '#3a5070', letterSpacing: 1 }}>
+              {totalCrushes !== null
+                ? `${(page - 1) * 10 + 1}–${Math.min(page * 10, totalCrushes)} of ${totalCrushes}`
+                : hasMore
+                  ? `${(page - 1) * 10 + 1}–${page * 10}+`
+                  : `${(page - 1) * 10 + 1}–${(page - 1) * 10 + entries.length}`}
+            </span>
+
+            <button
+              onClick={() => {
+                setCursorHistory((prev: any[]) => [...prev, nextCursor])
+                setPage(p => p + 1)
+                loadPage(nextCursor)
+              }}
+              disabled={!hasMore}
+              style={{
+                background: !hasMore ? 'transparent' : '#141f33',
+                border: '1px solid rgba(255,255,255,0.10)',
+                color: !hasMore ? '#2a3a50' : '#a8b8cc',
+                cursor: !hasMore ? 'default' : 'pointer',
+                padding: '7px 18px',
+                borderRadius: 8,
+                fontSize: 9,
+                fontFamily: font,
+                fontWeight: 700,
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+              }}
+            >
+              Next →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
