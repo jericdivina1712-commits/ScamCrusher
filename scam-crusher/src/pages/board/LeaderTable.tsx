@@ -52,7 +52,7 @@ export default function LeaderTable({ leaderboard, myAddr }: Props) {
 
   // Responsive breakpoints
   const isWide   = width >= 768   // show rarity col + view btn
-  const isMedium = width >= 480   // show crush count
+
 
   // Dynamic grid: rank | wallet | [crushes] | [rarity] | [view]
   const grid = isWide
@@ -153,7 +153,6 @@ export default function LeaderTable({ leaderboard, myAddr }: Props) {
           const rank   = i + 1
           const isMe   = e.owner === myAddr
           const rarity = (e.rarity ?? 'COMMON').toUpperCase()
-          const rs     = RARITY_STYLE[rarity] ?? RARITY_STYLE.COMMON
           const rc     = rankColor(rank)
 
           return (

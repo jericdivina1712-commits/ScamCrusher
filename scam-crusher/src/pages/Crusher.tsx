@@ -192,10 +192,9 @@ function NFTCard({
 
 export default function Crusher({
   account, nfts, objects, selectedNfts, selectedTargets,
-  toggleNft, toggleTarget, crush, canCrush, siteActive, crushFee,
+  toggleNft, toggleTarget, crush, canCrush, siteActive: _siteActive, crushFee,
   loading, loadAssets, status, objectPage, setObjectPage, getImage
 }: CrusherProps) {
-
   if (!account) {
     return (
       <div style={{

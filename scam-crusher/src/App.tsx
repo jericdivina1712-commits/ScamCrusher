@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction, ConnectButton } from '@mysten/dapp-kit'
+import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
 
 import Navbar from './components/Navbar'
@@ -36,7 +36,7 @@ export default function App() {
   const [maxSupply, setMaxSupply] = useState(1000)
   const [leaderboard, setLeaderboard] = useState<any[]>([])
   const [lbLoading, setLbLoading] = useState(false)
-  const [siteActive, setSiteActive] = useState<boolean>(true)
+  const [siteActive] = useState<boolean>(true)
   const [objectPage, setObjectPage] = useState(0)
   const [, setBgLoaded] = useState(false)
 

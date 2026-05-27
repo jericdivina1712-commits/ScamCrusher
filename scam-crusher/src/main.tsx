@@ -7,7 +7,7 @@ import './index.css'
 import App from './App.tsx'
 
 const { networkConfig } = createNetworkConfig({
-  testnet: { url: 'https://fullnode.testnet.sui.io' },
+  testnet: { url: 'https://fullnode.testnet.sui.io', network: 'testnet' },
 })
 
 const queryClient = new QueryClient()
