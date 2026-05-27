@@ -72,11 +72,8 @@ async function recoverBurnedNFT(
   id: targetId,
   options: { showDisplay: true, showContent: true },
 })
-console.log('[recover] full obj:', JSON.stringify(obj, null, 2))
 const display = obj.data?.display?.data ?? {}
 const fields = obj.data?.content?.fields ?? {}
-console.log('[recover] display:', display)
-console.log('[recover] fields:', fields)
 return {
   image_url: display.image_url ?? fields.image_url ?? null,
   nft_name: display.name ?? fields.name ?? null,

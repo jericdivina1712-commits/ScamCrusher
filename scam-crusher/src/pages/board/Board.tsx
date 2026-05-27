@@ -7,7 +7,7 @@ type LeaderboardProps = {
   lbLoading: boolean
   loadLeaderboard: () => void
 }
-
+const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 const font = "'DM Sans', 'Syne', system-ui, sans-serif"
 const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
 
@@ -25,7 +25,7 @@ export default function Board({ account, leaderboard, lbLoading, loadLeaderboard
       <div style={{
         maxWidth: 860,
         margin: '0 auto',
-        padding: '60px 20px 24px',
+        padding: isMobile ? '20px 20px 24px' : '60px 20px 24px',
         color: '#e8f0ff',
         fontFamily: font,
       }}>

@@ -25,7 +25,6 @@ function useWindowWidth() {
 }
 
 const sa = (a: string) => (a ? a.slice(0, 6) + '...' + a.slice(-4) : '')
-const initials = (a: string) => (a ? a.slice(-3).toUpperCase() : '???')
 
 const rankColor = (r: number) =>
   r === 1 ? '#f5c842' : r === 2 ? '#a8b8cc' : r === 3 ? '#e07c3a' : '#5a7399'
@@ -37,27 +36,17 @@ const RARITY_STYLE: Record<string, { bg: string; color: string }> = {
   LEGEND: { bg: 'rgba(245,200,66,0.12)', color: '#f5c842' },
 }
 
-const AVATAR_BG: Record<string, { bg: string; color: string }> = {
-  COMMON: { bg: 'rgba(239,68,68,0.10)',   color: '#ef4444' },
-  RARE:   { bg: 'rgba(74,158,255,0.10)',  color: '#4a9eff' },
-  EPIC:   { bg: 'rgba(168,85,247,0.10)', color: '#a855f7' },
-  LEGEND: { bg: 'rgba(245,200,66,0.10)', color: '#f5c842' },
-}
-
 const font = "'DM Sans', system-ui, sans-serif"
 
 export default function LeaderTable({ leaderboard, myAddr }: Props) {
   const [modalOwner, setModalOwner] = useState<string | null>(null)
   const width = useWindowWidth()
 
-  // Responsive breakpoints
-  const isWide   = width >= 768   // show rarity col + view btn
+  const isWide = width >= 768
 
-
-  // Dynamic grid: rank | wallet | [crushes] | [rarity] | [view]
   const grid = isWide
-  ? '52px 1fr 100px 100px 70px'
-  : '36px 1fr 80px 80px'
+    ? '52px 1fr 100px 100px 70px'
+    : '36px 1fr 80px 80px'
 
   const myIndex = leaderboard.findIndex(e => e.owner === myAddr)
   const inTable = myIndex >= 0
@@ -65,21 +54,6 @@ export default function LeaderTable({ leaderboard, myAddr }: Props) {
   const col: React.CSSProperties = {
     fontSize: 9, letterSpacing: 3, color: '#5a7399',
     fontWeight: 600, textTransform: 'uppercase', fontFamily: font,
-  }
-
-  function AvatarDot({ owner, rarity, isMe }: { owner: string; rarity: string; isMe: boolean }) {
-    const av = AVATAR_BG[rarity] ?? AVATAR_BG.COMMON
-    return (
-      <div style={{
-        width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-        background: isMe ? 'rgba(74,158,255,0.12)' : av.bg,
-        color: isMe ? '#4a9eff' : av.color,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 9, fontWeight: 700, fontFamily: font, letterSpacing: 0.5,
-      }}>
-        {initials(owner)}
-      </div>
-    )
   }
 
   function RarityPill({ rarity }: { rarity: string }) {
@@ -128,23 +102,22 @@ export default function LeaderTable({ leaderboard, myAddr }: Props) {
           }}>
             <span style={{ fontSize: 13, color: '#5a7399', fontFamily: font }}>—</span>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <AvatarDot owner={myAddr} rarity="COMMON" isMe={true} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 12, color: '#e8f0ff', fontFamily: font }}>{sa(myAddr)}</span>
-                <span style={{
-                  fontSize: 9, background: 'rgba(74,158,255,0.15)', color: '#4a9eff',
-                  padding: '2px 7px', borderRadius: 10, fontWeight: 600,
-                  letterSpacing: 1, fontFamily: font,
-                }}>You</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+              <span style={{ fontSize: 12, color: '#e8f0ff', fontFamily: font, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {sa(myAddr)}
+              </span>
+              <span style={{
+                fontSize: 9, background: 'rgba(74,158,255,0.15)', color: '#4a9eff',
+                padding: '2px 7px', borderRadius: 10, fontWeight: 600,
+                letterSpacing: 1, fontFamily: font, flexShrink: 0,
+              }}>You</span>
             </div>
 
             <span style={{ fontSize: 13, color: '#5a7399', textAlign: 'right', fontFamily: font }}>×0</span>
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <RarityPill rarity="COMMON" />
-              </div>
-              {isWide && <span />}
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <RarityPill rarity="COMMON" />
+            </div>
+            {isWide && <span />}
           </div>
         )}
 
@@ -174,21 +147,22 @@ export default function LeaderTable({ leaderboard, myAddr }: Props) {
                 #{rank}
               </span>
 
+              {/* Wallet */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-              <span style={{
-                fontSize: 12, color: '#e8f0ff', fontFamily: font,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {sa(e.owner)}
-              </span>
-              {isMe && (
                 <span style={{
-                  fontSize: 9, background: 'rgba(74,158,255,0.15)', color: '#4a9eff',
-                  padding: '2px 7px', borderRadius: 10, fontWeight: 600,
-                  letterSpacing: 1, fontFamily: font, flexShrink: 0,
-                }}>You</span>
-              )}
-            </div>
+                  fontSize: 12, color: '#e8f0ff', fontFamily: font,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {sa(e.owner)}
+                </span>
+                {isMe && (
+                  <span style={{
+                    fontSize: 9, background: 'rgba(74,158,255,0.15)', color: '#4a9eff',
+                    padding: '2px 7px', borderRadius: 10, fontWeight: 600,
+                    letterSpacing: 1, fontFamily: font, flexShrink: 0,
+                  }}>You</span>
+                )}
+              </div>
 
               {/* Crush count */}
               <span style={{
