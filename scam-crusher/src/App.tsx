@@ -422,7 +422,7 @@ export default function App() {
           crushFee={crushFee}
           loading={loading}
           loadAssets={loadAssets}
-          status={status}
+          status={crusherStatus}
 
           objectPage={objectPage}
           setObjectPage={setObjectPage}
