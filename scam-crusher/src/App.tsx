@@ -349,7 +349,7 @@ export default function App() {
       color: '#e8f0ff',
       fontFamily: 'Georgia, serif',
     }}>
-      {tab === 'home'    && <Home />}
+      {tab === 'home' && <Home setTab={setTab} />}
       {tab === 'crusher' && (
         <Crusher
           account={account}

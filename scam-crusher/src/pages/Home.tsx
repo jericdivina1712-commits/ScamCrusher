@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
 
-export default function Home() {
+type HomeProps = {
+  setTab: (t: 'home' | 'crusher' | 'assets' | 'board') => void
+}
+export default function Home({ setTab }: HomeProps) {
   useEffect(() => {
     const el = document.getElementById('hero-div')
     if (el) console.log('[hero] computed bg-position:', window.getComputedStyle(el).backgroundPosition)
@@ -12,27 +15,138 @@ export default function Home() {
       <style>{`
         @keyframes hpulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes mintPulse { 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.08) } }
 
-        .section-card {
+        /* ── Section card shell ── */
+        .sc {
           background: #0f1829;
           border-radius: 16px;
-          padding: 24px;
-          margin-bottom: 20px;
           border: 1px solid rgba(74,158,255,0.12);
-          box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+          overflow: hidden;
+          margin-bottom: 20px;
         }
-        .section-card-title {
-          font-size: 10px;
-          letter-spacing: 4px;
-          color: #4a9eff;
-          border-bottom: 1px solid rgba(74,158,255,0.12);
-          padding-bottom: 10px;
-          margin-bottom: 18px;
-          font-weight: bold;
-          text-transform: uppercase;
+        .sc-head {
+          padding: 22px 24px 18px;
+          border-bottom: 1px solid rgba(74,158,255,0.08);
+        }
+        .sc-tag {
+          font-size: 9px; letter-spacing: 4px; color: #4a9eff;
+          text-transform: uppercase; margin-bottom: 7px;
+          font-family: Georgia, serif;
+        }
+        .sc-title {
+          font-size: 17px; font-weight: bold; color: #e8f0ff;
+          margin-bottom: 8px; line-height: 1.3;
+        }
+        .sc-sub {
+          font-size: 12px; color: #5a7399; line-height: 1.75;
+        }
+        .sc-body {
+          padding: 18px 24px;
+          display: flex; flex-direction: column; gap: 10px;
         }
 
-        /* Mobile overrides */
+        /* ── Rarity rows ── */
+        .rarity-row {
+          display: flex; align-items: flex-start; gap: 14px;
+          padding: 14px; border-radius: 10px;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.05);
+        }
+        .rarity-kanji {
+          font-size: 28px; width: 34px; text-align: center;
+          flex-shrink: 0; line-height: 1; margin-top: 2px;
+        }
+        .rarity-info { flex: 1; min-width: 0; }
+        .rarity-name {
+          font-size: 11px; font-weight: bold; letter-spacing: 2px;
+          margin-bottom: 4px; text-transform: uppercase;
+        }
+        .rarity-desc {
+          font-size: 11px; color: #5a7399; line-height: 1.65;
+          margin-bottom: 9px;
+        }
+        .rarity-bar-wrap { display: flex; align-items: center; gap: 10px; }
+        .rarity-bar-bg {
+          flex: 1; height: 4px;
+          background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden;
+        }
+        .rarity-bar-fill { height: 100%; border-radius: 2px; }
+        .rarity-pts { font-size: 10px; color: #4a6fa5; font-family: monospace; white-space: nowrap; }
+
+        /* ── Steps ── */
+        .step-row {
+          display: flex; gap: 14px; align-items: flex-start;
+          padding: 14px; border-radius: 10px;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.05);
+        }
+        .step-num {
+          width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 13px; font-weight: bold;
+          border: 1px solid rgba(74,158,255,0.3);
+          color: #4a9eff; background: rgba(74,158,255,0.08);
+        }
+        .step-title {
+          font-size: 12px; font-weight: bold; color: #e8f0ff;
+          margin-bottom: 5px; letter-spacing: 1px;
+        }
+        .step-desc { font-size: 11px; color: #5a7399; line-height: 1.7; }
+        .step-note {
+          display: inline-block; margin-top: 7px;
+          font-size: 10px; padding: 3px 10px; border-radius: 20px;
+          background: rgba(74,158,255,0.08); color: #4a9eff;
+          border: 1px solid rgba(74,158,255,0.18); letter-spacing: 1px;
+        }
+        .step-connector {
+          height: 10px; width: 1px;
+          background: rgba(74,158,255,0.15);
+          margin-left: 23px;
+        }
+
+        /* ── Reward rows ── */
+        .reward-row {
+          display: flex; align-items: center; gap: 12px;
+          padding: 13px 14px; border-radius: 10px;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.05);
+        }
+        .reward-medal {
+          width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 11px; font-weight: bold;
+        }
+        .reward-rank { font-size: 12px; font-weight: bold; color: #e8f0ff; margin-bottom: 3px; }
+        .reward-desc { font-size: 11px; color: #5a7399; }
+        .reward-pct { font-size: 22px; font-weight: bold; font-family: monospace; }
+        .reward-of { font-size: 9px; color: #4a6fa5; letter-spacing: 1px; margin-top: 2px; text-align: right; }
+        .ops-note {
+          padding: 12px 14px; border-radius: 10px;
+          background: rgba(74,158,255,0.04);
+          border: 1px solid rgba(74,158,255,0.1);
+          font-size: 11px; color: #4a6fa5; line-height: 1.75;
+        }
+
+        /* ── Mint Now button ── */
+        .mint-now-btn {
+          margin-top: 28px;
+          background: rgba(5,15,35,0.85);
+          border: 2px solid rgba(74,158,255,0.35);
+          color: #7ab3ff;
+          font-size: 13px;
+          letter-spacing: 6px;
+          padding: 12px 40px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-family: Georgia, serif;
+          animation: mintPulse 2s ease-in-out infinite;
+        }
+        .mint-now-btn:hover {
+          background: rgba(74,158,255,0.1);
+        }
+
+        /* ── Mobile overrides ── */
         @media (max-width: 768px) {
           #hero-div {
             align-items: center !important;
@@ -48,10 +162,22 @@ export default function Home() {
             text-align: center !important;
             padding: 0 20px !important;
           }
-          .hero-kanji { font-size: 48px !important; }
-          .hero-title { font-size: 22px !important; letter-spacing: 4px !important; }
-          .hero-sub   { font-size: 9px !important; letter-spacing: 2px !important; }
-          .hero-stats { width: 100% !important; }
+          .hero-kanji  { font-size: 52px !important; }
+          .hero-title  { font-size: 22px !important; letter-spacing: 4px !important; }
+          .hero-sub    { font-size: 9px !important; letter-spacing: 2px !important; }
+          .hero-stats  { width: 100% !important; }
+          .mint-now-btn { font-size: 11px !important; padding: 10px 28px !important; letter-spacing: 4px !important; }
+          .sc-head     { padding: 18px 16px 14px !important; }
+          .sc-body     { padding: 14px 16px !important; }
+          .sc-title    { font-size: 15px !important; }
+          .rarity-kanji { font-size: 22px !important; width: 26px !important; }
+          .reward-pct  { font-size: 18px !important; }
+          .reward-medal { width: 34px !important; height: 34px !important; font-size: 10px !important; }
+        }
+
+        @media (min-width: 769px) {
+          .content-wrap { max-width: 700px; margin: 0 auto; padding: 40px 24px; }
+          .sc-title { font-size: 18px !important; }
         }
       `}</style>
 
@@ -76,14 +202,12 @@ export default function Home() {
           paddingTop: 60,
         }}
       >
-        {/* dark gradient overlay */}
         <div style={{
           position: 'absolute', inset: 0,
           background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 70%, rgba(5,15,35,0.98) 100%)',
           pointerEvents: 'none',
         }} />
 
-        {/* Hero text */}
         <div
           className="hero-text-wrap"
           style={{
@@ -132,7 +256,7 @@ export default function Home() {
             PURGE THE UNWORTHY · RISE IN RARITY
           </div>
 
-          {/* Quick stats strip */}
+          {/* Stats strip */}
           <div className="hero-stats" style={{
             display: 'flex', borderRadius: 14, overflow: 'hidden',
             border: '1px solid rgba(74,158,255,0.25)',
@@ -153,6 +277,15 @@ export default function Home() {
               </div>
             ))}
           </div>
+
+          {/* MINT NOW — pulsing CTA */}
+          <button
+            className="mint-now-btn"
+            onClick={() => setTab('assets')}
+          >
+            MINT NOW
+          </button>
+
         </div>
 
         {/* Scroll cue */}
@@ -184,95 +317,180 @@ export default function Home() {
           </span>
         </div>
 
-        <div style={{ maxWidth: 640, margin: '0 auto', padding: '32px 20px' }}>
+        <div className="content-wrap" style={{ maxWidth: 640, margin: '0 auto', padding: '32px 16px' }}>
 
-          {/* ── Rarity tiers ── */}
-          <div className="section-card">
-            <div className="section-card-title">RARITY &amp; EVOLUTION</div>
-            {[
-              { kanji: '凡', name: 'COMMON',    pts: '0 – 49 pt',    color: '#e74c3c', bar: 20  },
-              { kanji: '稀', name: 'RARE',      pts: '50 – 199 pt',  color: '#4a9eff', bar: 45  },
-              { kanji: '傑', name: 'EPIC',      pts: '200 – 499 pt', color: '#a855f7', bar: 70  },
-              { kanji: '神', name: 'LEGENDARY', pts: '500 pt〜',     color: '#f5c842', bar: 100 },
-            ].map(({ kanji, name, pts, color, bar }) => (
-              <div key={name} style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '11px 12px', marginBottom: 8, borderRadius: 10,
-                background: 'rgba(255,255,255,0.03)',
-                border: `1px solid rgba(255,255,255,0.06)`,
-                borderLeft: `3px solid ${color}`,
-              }}>
-                <span style={{ fontSize: 20, width: 24, textAlign: 'center', color }}>{kanji}</span>
-                <span style={{ fontSize: 12, fontWeight: 'bold', color: '#e8f0ff', flex: 1 }}>{name}</span>
-                <div style={{ width: 56, height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
-                  <div style={{ width: `${bar}%`, height: '100%', background: color, borderRadius: 2 }} />
-                </div>
-                <span style={{ fontSize: 10, color: '#5a7399', fontFamily: 'monospace', minWidth: 72, textAlign: 'right' }}>{pts}</span>
+          {/* ── CARD 1: Rarity & Evolution ── */}
+          <div className="sc">
+            <div className="sc-head">
+              <div className="sc-tag">Rarity &amp; Evolution</div>
+              <div className="sc-title">Your NFT grows as you crush</div>
+              <div className="sc-sub">
+                Every scam NFT you destroy earns your Crusher points. Accumulate enough and your NFT's appearance and rank automatically evolve — no manual action needed. The more you purge, the rarer you become.
               </div>
-            ))}
-          </div>
-
-          {/* ── How it works ── */}
-          <div className="section-card">
-            <div className="section-card-title">HOW IT WORKS</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            </div>
+            <div className="sc-body">
               {[
-                { icon: '⛏', label: 'Mint Price',        val: '10 SUI'       },
-                { icon: '💥', label: 'Crush Fee',         val: '0.1 SUI'      },
-                { icon: '🪙', label: 'Total Supply',      val: '1,000 NFTs'   },
-                { icon: '🏆', label: 'Reward Pool Share', val: '70% to Top 5' },
-              ].map(({ icon, label, val }) => (
-                <div key={label} style={{
-                  background: 'rgba(74,158,255,0.04)',
-                  borderRadius: 12, padding: '14px',
-                  border: '1px solid rgba(74,158,255,0.1)',
-                }}>
-                  <div style={{ fontSize: 22, marginBottom: 6 }}>{icon}</div>
-                  <div style={{ fontSize: 9, letterSpacing: 2, color: '#5a7399', marginBottom: 4 }}>{label.toUpperCase()}</div>
-                  <div style={{ fontSize: 15, fontWeight: 'bold', color: '#e8f0ff' }}>{val}</div>
+                {
+                  kanji: '凡', name: 'COMMON', color: '#e74c3c',
+                  desc: 'Starting rank for all new Crushers. Your NFT is freshly minted — the purge has just begun.',
+                  pts: '0 – 49 pts', bar: 20,
+                },
+                {
+                  kanji: '稀', name: 'RARE', color: '#4a9eff',
+                  desc: "You've proven yourself an active enforcer. Your NFT visually evolves and your name starts appearing on the board.",
+                  pts: '50 – 199 pts', bar: 45,
+                },
+                {
+                  kanji: '傑', name: 'EPIC', color: '#a855f7',
+                  desc: 'A seasoned purger. Your commitment to cleaning the ecosystem is etched onchain for all to see.',
+                  pts: '200 – 499 pts', bar: 70,
+                },
+                {
+                  kanji: '神', name: 'LEGENDARY', color: '#f5c842',
+                  desc: 'The highest tier. Reserved for the most ruthless enforcers of the Sui ecosystem. Season rewards await.',
+                  pts: '500+ pts', bar: 100,
+                },
+              ].map(({ kanji, name, color, desc, pts, bar }) => (
+                <div key={name} className="rarity-row" style={{ borderLeft: `3px solid ${color}` }}>
+                  <div className="rarity-kanji" style={{ color }}>{kanji}</div>
+                  <div className="rarity-info">
+                    <div className="rarity-name" style={{ color }}>{name}</div>
+                    <div className="rarity-desc">{desc}</div>
+                    <div className="rarity-bar-wrap">
+                      <div className="rarity-bar-bg">
+                        <div className="rarity-bar-fill" style={{ width: `${bar}%`, background: color }} />
+                      </div>
+                      <div className="rarity-pts">{pts}</div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ── Reward split ── */}
-          <div className="section-card">
-            <div className="section-card-title">SEASON REWARD SPLIT</div>
-            {[
-              { rank: '1st', pct: '35%', color: '#f5c842', bg: 'rgba(245,200,66,0.06)',   label: 'Gold'   },
-              { rank: '2nd', pct: '12%', color: '#a8b8cc', bg: 'rgba(168,184,204,0.06)', label: 'Silver' },
-              { rank: '3rd', pct: '10%', color: '#e07c3a', bg: 'rgba(224,124,58,0.06)',  label: 'Bronze' },
-              { rank: '4th', pct: '7%',  color: '#4a9eff', bg: 'rgba(74,158,255,0.04)',  label: ''       },
-              { rank: '5th', pct: '6%',  color: '#4a9eff', bg: 'rgba(74,158,255,0.04)',  label: ''       },
-            ].map(({ rank, pct, color, bg, label }) => (
-              <div key={rank} style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '10px 12px', marginBottom: 8, borderRadius: 10,
-                background: bg,
-                border: '1px solid rgba(255,255,255,0.05)',
-              }}>
-                <div style={{
-                  width: 34, height: 34, borderRadius: '50%',
-                  border: `1.5px solid ${color}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 'bold', color, flexShrink: 0,
-                }}>
-                  {rank}
-                </div>
-                <span style={{ flex: 1, fontSize: 12, color: '#a8c0e0' }}>
-                  {label || rank + ' place'}
-                </span>
-                <span style={{ fontSize: 20, fontWeight: 'bold', color, fontFamily: 'monospace' }}>{pct}</span>
+          {/* ── CARD 2: How it works ── */}
+          <div className="sc">
+            <div className="sc-head">
+              <div className="sc-tag">How It Works</div>
+              <div className="sc-title">Four steps from mint to reward</div>
+              <div className="sc-sub">
+                Scam Crusher is a points-based competitive protocol on Sui. Mint a Crusher NFT, destroy junk objects from your wallet, climb the leaderboard, and claim your share of the pool at season's end.
               </div>
-            ))}
-            <div style={{
-              fontSize: 10, color: '#5a7399', marginTop: 12, lineHeight: 1.7,
-              padding: '10px 12px',
-              background: 'rgba(255,255,255,0.03)',
-              borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.06)',
-            }}>
-              30% allocated to protocol operations &amp; maintenance.
+            </div>
+            <div className="sc-body">
+              {[
+                {
+                  n: 1,
+                  title: 'Mint your Crusher NFT',
+                  desc: 'Pay 10 SUI to mint. Your NFT is stored in a secure Kiosk on Sui — fully onchain, fully yours. 100% of mint fees go directly into the reward pool.',
+                  note: '10 SUI · 1,000 max supply',
+                },
+                {
+                  n: 2,
+                  title: 'Load your wallet targets',
+                  desc: 'Connect your wallet and load assets. Any non-coin object — spam NFTs, scam tokens, junk airdrops — becomes a valid crush target.',
+                  note: 'Any object type supported',
+                },
+                {
+                  n: 3,
+                  title: 'Crush & earn points',
+                  desc: 'Select targets and hit Crush. Each destroy earns your NFT 1 point and costs 0.1 SUI in crush fee — also added to the pool. Hold multiple NFTs to multiply your points per crush.',
+                  note: '0.1 SUI per crush · all to pool',
+                },
+                {
+                  n: 4,
+                  title: 'Rank up & claim rewards',
+                  desc: "Your cumulative crush count determines your leaderboard rank. At season's end, the top 5 wallets split 70% of the entire pool based on their final position.",
+                  note: 'Season ends at sold out',
+                },
+              ].map(({ n, title, desc, note }, i, arr) => (
+                <div key={n}>
+                  <div className="step-row">
+                    <div className="step-num">{n}</div>
+                    <div>
+                      <div className="step-title">{title}</div>
+                      <div className="step-desc">{desc}</div>
+                      <div className="step-note">{note}</div>
+                    </div>
+                  </div>
+                  {i < arr.length - 1 && <div className="step-connector" />}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── CARD 3: Season Reward Split ── */}
+          <div className="sc">
+            <div className="sc-head">
+              <div className="sc-tag">Season Reward Split</div>
+              <div className="sc-title">The top 5 take 70% of the pool</div>
+              <div className="sc-sub">
+                At the end of Season 1, the reward pool — built entirely from mint and crush fees — is distributed to the top 5 ranked wallets. The more you crush, the bigger your share.
+              </div>
+            </div>
+            <div className="sc-body">
+              {[
+                {
+                  rank: '1st', label: 'Gold — Top Crusher',
+                  desc: "The season's most ruthless purger. Largest single share of the pool.",
+                  pct: '35%', color: '#f5c842',
+                  bg: 'rgba(245,200,66,0.12)', border: 'rgba(245,200,66,0.3)',
+                  rowBg: 'rgba(245,200,66,0.04)', accent: '#f5c842',
+                },
+                {
+                  rank: '2nd', label: 'Silver',
+                  desc: 'Close runner-up. Still a meaningful share for consistent grinders.',
+                  pct: '12%', color: '#a8b8cc',
+                  bg: 'rgba(168,184,204,0.12)', border: 'rgba(168,184,204,0.3)',
+                  rowBg: 'transparent', accent: '#a8b8cc',
+                },
+                {
+                  rank: '3rd', label: 'Bronze',
+                  desc: "Top 3 is elite territory. Don't sleep on this position.",
+                  pct: '10%', color: '#e07c3a',
+                  bg: 'rgba(224,124,58,0.12)', border: 'rgba(224,124,58,0.3)',
+                  rowBg: 'transparent', accent: '#e07c3a',
+                },
+                {
+                  rank: '4th', label: '4th place',
+                  desc: 'Still rewarded. Every position in the top 5 earns a payout.',
+                  pct: '7%', color: '#4a9eff',
+                  bg: 'rgba(74,111,165,0.12)', border: 'rgba(74,111,165,0.3)',
+                  rowBg: 'transparent', accent: '#4a9eff',
+                },
+                {
+                  rank: '5th', label: '5th place',
+                  desc: 'The minimum to earn. Breaking top 5 is the goal every Crusher aims for.',
+                  pct: '6%', color: '#4a9eff',
+                  bg: 'rgba(74,111,165,0.12)', border: 'rgba(74,111,165,0.3)',
+                  rowBg: 'transparent', accent: '#4a9eff',
+                },
+              ].map(({ rank, label, desc, pct, color, bg, border, rowBg, accent }) => (
+                <div
+                  key={rank}
+                  className="reward-row"
+                  style={{ borderLeft: `3px solid ${accent}`, background: rowBg }}
+                >
+                  <div className="reward-medal" style={{ background: bg, border: `1px solid ${border}`, color }}>
+                    {rank}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="reward-rank">{label}</div>
+                    <div className="reward-desc">{desc}</div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div className="reward-pct" style={{ color }}>{pct}</div>
+                    <div className="reward-of">of pool</div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="ops-note">
+                <span style={{ color: '#4a9eff', fontSize: 10, letterSpacing: 2, fontWeight: 'bold' }}>
+                  PROTOCOL NOTE —&nbsp;
+                </span>
+                The remaining 30% of the pool is allocated to operational costs and protocol maintenance to keep the season running smoothly.
+              </div>
             </div>
           </div>
 
