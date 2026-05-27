@@ -22,7 +22,6 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('home')
   const [nfts, setNfts] = useState<any[]>([])
   const [objects, setObjects] = useState<any[]>([])
-  const [selectedNfts, setSelectedNfts] = useState<Set<string>>(new Set())
   const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [crusherStatus, setCrusherStatus] = useState('')
@@ -197,7 +196,6 @@ export default function App() {
 
     const allNfts = [...kioskNfts]
     setNfts(allNfts)
-    if (allNfts.length > 0) setSelectedNfts(new Set([allNfts[0].data!.objectId]))
 
     setObjects(
       all.filter(
@@ -222,14 +220,6 @@ export default function App() {
     setLoading(false)
   }
 
-  const toggleNft = (id: string) => {
-    setSelectedNfts(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
-
   const toggleTarget = (id: string) => {
     setSelectedTargets(prev => {
       const next = new Set(prev)
@@ -239,61 +229,129 @@ export default function App() {
   }
 
   const crush = async () => {
-    console.log('crush fired')
-    console.log('selectedNfts:', [...selectedNfts])
-    console.log('selectedTargets:', [...selectedTargets])
-    console.log('account:', account)
-    if (selectedNfts.size === 0 || selectedTargets.size === 0 || !account) {
-      console.log('early exit — nfts:', selectedNfts.size, 'targets:', selectedTargets.size, 'account:', !!account)
-      return
-    }
-    const nftList = nfts.filter((n: any) => selectedNfts.has(n.data.objectId))
+    if (nfts.length === 0 || selectedTargets.size === 0 || !account) return
+
     const targetList = objects.filter(o => selectedTargets.has(o.data.objectId))
-    console.log('nftList:', nftList.length, 'targetList:', targetList.length)
     const tx = new Transaction()
+
+    // All NFTs are from kiosks — group them by kiosk so we can call crush_all per kiosk
+    const kioskGroups = new Map<string, { kCapId: string; iv: number; nftIds: string[] }>()
+
+    for (const nft of nfts) {
+      const kId = (nft as any)._kioskId
+      const kCapId = (nft as any)._kioskCapId
+      if (!kioskGroups.has(kId)) {
+        const kioskObj = await client.getObject({ id: kId, options: { showOwner: true } })
+        const iv = (kioskObj.data?.owner as any)?.Shared?.initial_shared_version
+        kioskGroups.set(kId, { kCapId, iv, nftIds: [] })
+      }
+      kioskGroups.get(kId)!.nftIds.push(nft.data.objectId)
+    }
+
+    let commandIndex = 0
+
     for (const target of targetList) {
-      for (const nft of nftList) {
-        const kId = (nft as any)._kioskId
-        const kCapId = (nft as any)._kioskCapId
-        console.log('kId:', kId, 'kCapId:', kCapId, 'nftId:', nft.data.objectId)
+      console.log(`--- Target: ${target.data.objectId} | type: ${target.data.type}`)
 
-        // Bug fix #3: always fetch iv dynamically, never hardcode
-        const kioskObj2 = await client.getObject({ id: kId, options: { showOwner: true } })
-        const iv = (kioskObj2.data?.owner as any)?.Shared?.initial_shared_version
-        console.log('iv:', iv)
+      // STEP 1:
+      // Every NFT gets a point first
+      for (const [kId, { kCapId, iv, nftIds }] of kioskGroups) {
+        console.log(
+          `  Kiosk: ${kId} | cap: ${kCapId} | iv: ${iv} | nftCount: ${nftIds.length}`
+        )
 
-        tx.moveCall({
-          target: `${PACKAGE_ID}::crusher::record_point_in_kiosk`,
-          typeArguments: [target.data.type],
-          arguments: [
-            tx.sharedObjectRef({ objectId: kId, initialSharedVersion: iv, mutable: true }),
-            tx.object(kCapId),
-            tx.pure.id(nft.data.objectId),
-            tx.object(target.data.objectId),
-            tx.object(COLLECTION_CONFIG_ID),
-          ],
-        })
-        const [payment] = tx.splitCoins(tx.gas, [tx.pure.u64(100000000)])
+        for (const nftId of nftIds) {
+          console.log(
+            `  [cmd ${commandIndex}] record_point_in_kiosk — nftId: ${nftId}`
+          )
+
+          tx.moveCall({
+            target: `${PACKAGE_ID}::crusher::record_point_in_kiosk`,
+            typeArguments: [target.data.type],
+            arguments: [
+              tx.sharedObjectRef({
+                objectId: kId,
+                initialSharedVersion: iv,
+                mutable: true,
+              }),
+              tx.object(kCapId),
+              tx.pure.id(nftId),
+
+              // IMPORTANT:
+              // fresh object reference every time
+              tx.object(target.data.objectId),
+
+              tx.object(COLLECTION_CONFIG_ID),
+            ],
+          })
+
+          commandIndex++
+        }
+      }
+
+      // STEP 2:
+      // Delete target ONLY ONCE
+      const firstEntry = kioskGroups.entries().next().value
+
+      if (firstEntry) {
+        const [kId, kioskData] = firstEntry
+        const { kCapId, iv, nftIds } = kioskData
+
+        const [payment] = tx.splitCoins(tx.gas, [
+          tx.pure.u64(crushFee),
+        ])
+
+        console.log(
+          `  [cmd ${commandIndex}] splitCoins for payment`
+        )
+        commandIndex++
+
+        console.log(
+          `  [cmd ${commandIndex}] delete_target_from_kiosk — nftId: ${nftIds[0]} | target: ${target.data.objectId}`
+        )
+
         tx.moveCall({
           target: `${PACKAGE_ID}::crusher::delete_target_from_kiosk`,
           typeArguments: [target.data.type],
           arguments: [
-            tx.sharedObjectRef({ objectId: kId, initialSharedVersion: iv, mutable: true }),
+            tx.sharedObjectRef({
+              objectId: kId,
+              initialSharedVersion: iv,
+              mutable: true,
+            }),
             tx.object(kCapId),
-            tx.pure.id(nft.data.objectId),
+            tx.pure.id(nftIds[0]),
+
+            // THIS ONE consumes target
             tx.object(target.data.objectId),
+
             payment,
             tx.object(COLLECTION_CONFIG_ID),
           ],
         })
-        tx.transferObjects([payment], tx.pure.address(account.address))
+
+        commandIndex++
+
+        console.log(
+          `  [cmd ${commandIndex}] transferObjects payment`
+        )
+
+        tx.transferObjects(
+          [payment],
+          tx.pure.address(account.address)
+        )
+
+        commandIndex++
       }
     }
-    console.log('built tx, calling signAndExecute now')
+
+    console.log('Total commands built:', commandIndex)
+    console.log('Full tx inputs:', JSON.stringify(tx, null, 2))
+
     await new Promise<void>(resolve => {
       signAndExecute({ transaction: tx }, {
         onSuccess: r => {
-          setCrusherStatus(`CRUSHED ${nftList.length * targetList.length} — ${r.digest}`)
+          setCrusherStatus(`CRUSHED — all ${nfts.length} NFTs got points — ${r.digest}`)
           resolve()
         },
         onError: e => {
@@ -338,7 +396,7 @@ export default function App() {
   const getImage = (obj: any) =>
     obj.data?.display?.data?.image_url || obj.data?.content?.fields?.image_url || null
 
-  const canCrush = selectedNfts.size > 0 && selectedTargets.size > 0
+  const canCrush = nfts.length > 0 && selectedTargets.size > 0
   const remaining = maxSupply - minted
 
  return (
@@ -355,9 +413,7 @@ export default function App() {
           account={account}
           nfts={nfts}
           objects={objects}
-          selectedNfts={selectedNfts}
           selectedTargets={selectedTargets}
-          toggleNft={toggleNft}
           toggleTarget={toggleTarget}
           crush={crush}
           canCrush={canCrush}

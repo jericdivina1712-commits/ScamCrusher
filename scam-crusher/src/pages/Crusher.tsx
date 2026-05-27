@@ -1,12 +1,9 @@
 import { useState } from 'react'
-
 type CrusherProps = {
   account: any
   nfts: any[]
   objects: any[]
-  selectedNfts: Set<string>
   selectedTargets: Set<string>
-  toggleNft: (id: string) => void
   toggleTarget: (id: string) => void
   crush: () => void
   canCrush: boolean
@@ -191,8 +188,8 @@ function NFTCard({
 }
 
 export default function Crusher({
-  account, nfts, objects, selectedNfts, selectedTargets,
-  toggleNft, toggleTarget, crush, canCrush, siteActive: _siteActive, crushFee,
+  account, nfts, objects, selectedTargets,
+  toggleTarget, crush, canCrush, siteActive: _siteActive, crushFee,
   loading, loadAssets, status, objectPage, setObjectPage, getImage
 }: CrusherProps) {
   if (!account) {
@@ -284,7 +281,6 @@ export default function Crusher({
             const rarity = (n.data.content?.fields?.rarity ?? 'COMMON').toUpperCase()
             const serial = n.data.content?.fields?.serial
             const crushCount = n.data.content?.fields?.crush_count ?? 0
-            const isSelected = selectedNfts.has(n.data.objectId)
             return (
               <NFTCard
                 key={n.data.objectId}
@@ -296,11 +292,11 @@ export default function Crusher({
                   { label: `Crush ×${crushCount}`, style: 'crush' },
                 ]}
                 rarity={rarity}
-                selected={isSelected}
+                selected={false}
                 selectedColor={rarityConfig[rarity]?.color ?? '#4a9eff'}
                 selectedGlow={rarityConfig[rarity]?.glow ?? 'rgba(74,158,255,0.2)'}
                 objectId={n.data.objectId}
-                onClick={() => toggleNft(n.data.objectId)}
+                onClick={() => {}}
               />
             )
           })}
@@ -417,7 +413,7 @@ export default function Crusher({
       >
         {canCrush
           ? `✦ Crush (${selectedTargets.size}) — ${(selectedTargets.size * crushFee / 1_000_000_000).toFixed(1)} SUI`
-          : 'Select NFT & Target to Crush'}
+          : 'Select a Target to Crush'}
       </button>
 
       {status && (
