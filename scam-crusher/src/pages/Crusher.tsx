@@ -556,6 +556,42 @@ const nftPageCount = Math.ceil(sortedNFTs.length / 2)
         </p>
       )}
       </div>
+ {/* ── SCROLL TO TOP ── */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        style={{
+          position: 'fixed',
+          bottom: 75,
+          right: 20,
+          zIndex: 50,
+          width: 42,
+          height: 42,
+          borderRadius: '50%',
+          background: 'rgba(13,24,41,0.85)',
+          border: '1px solid rgba(74,158,255,0.25)',
+          color: '#4a9eff',
+          fontSize: 16,
+          cursor: 'pointer',
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: font,
+          transition: 'border-color 0.2s, box-shadow 0.2s',
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(74,158,255,0.6)'
+          ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 20px rgba(74,158,255,0.25)'
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(74,158,255,0.25)'
+          ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.4)'
+        }}
+      >
+        ↑
+      </button>
+
     </>
   )
 }

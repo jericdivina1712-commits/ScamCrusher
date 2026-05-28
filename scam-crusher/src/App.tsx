@@ -7,12 +7,13 @@ import Home from './pages/Home'
 import Crusher from './pages/Crusher'
 import Assets from './pages/Assets'
 import Board from './pages/board/Board'
+import Roulette from './pages/Roulette'
 
 const PACKAGE_ID = '0x69d9f09680a1af2a441c2b69fb868cdec6bd0636ab607db13f4642be0d8eb04c'
 const NFT_PACKAGE_ID = '0x69d9f09680a1af2a441c2b69fb868cdec6bd0636ab607db13f4642be0d8eb04c'
 const COLLECTION_CONFIG_ID = '0xccb4139e4ef0bbd2c1d72ed91d833497f4283a54c0cf51cbe8ff00db6e878d1e'
 
-type Tab = 'home' | 'crusher' | 'assets' | 'board'
+type Tab = 'home' | 'crusher' | 'assets' | 'board' | 'roulette'
 
 export default function App() {
   const account = useCurrentAccount()
@@ -116,10 +117,11 @@ export default function App() {
     })
     signAndExecute({ transaction: tx }, {
       onSuccess: async (r: any) => {
-        setAssetsStatus(`MINTED ${mintCount} — ${r.digest}`)
+        setCrusherStatus(`CRUSHED — all ${nfts.length} NFTs got points — ${r.digest}`)
         await fetchCollectionInfo()
         setMinting(false)
         loadAssets()
+        setTimeout(() => setCrusherStatus(''), 5000)
       },
       onError: (e: any) => {
         setAssetsStatus('ERROR: ' + e.message)
@@ -374,6 +376,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
     if (tab === 'board') loadLeaderboard()
     if (tab === 'assets' && account) loadAssets()
   }, [tab, account])
@@ -443,6 +446,7 @@ export default function App() {
           loadLeaderboard={loadLeaderboard}
         />
       )}
+      {tab === 'roulette' && <Roulette account={account} />}
 
       <Navbar tab={tab} setTab={setTab} />
     </div>

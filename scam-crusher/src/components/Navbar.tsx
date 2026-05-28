@@ -14,7 +14,7 @@ function useIsDesktop(breakpoint = 768) {
   return isDesktop
 }
 
-type Tab = 'home' | 'crusher' | 'assets' | 'board'
+type Tab = 'home' | 'crusher' | 'assets' | 'board' | 'roulette'
 
 type NavbarProps = {
   tab: Tab
@@ -60,6 +60,20 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+    ),
+  },
+   {
+    id: 'roulette',
+    label: 'Roulette',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <circle cx="12" cy="12" r="3"/>
+        <line x1="12" y1="3" x2="12" y2="9"/>
+        <line x1="12" y1="15" x2="12" y2="21"/>
+        <line x1="3" y1="12" x2="9" y2="12"/>
+        <line x1="15" y1="12" x2="21" y2="12"/>
       </svg>
     ),
   },
