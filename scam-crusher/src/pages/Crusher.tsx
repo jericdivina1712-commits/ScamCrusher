@@ -248,9 +248,10 @@ const nftPageCount = Math.ceil(sortedNFTs.length / 2)
         .targets-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
         .crusher-layout { grid-template-columns: 1fr !important; }
         .crusher-sticky { position: static !important; }
+        .crusher-root { padding-top: 16px !important; }
       }
     `}</style>
-    <div style={{
+    <div className="crusher-root" style={{
       paddingTop: 70,
       paddingBottom: 100,
       maxWidth: 1400,
@@ -482,33 +483,68 @@ const nftPageCount = Math.ceil(sortedNFTs.length / 2)
 
       </div>{/* end two-col grid */}
 
-      {/* ── CRUSH BUTTON ── */}
-      <button
-        onClick={crush}
-        disabled={!canCrush}
-        style={{
-          width: '100%',
-          padding: '16px',
-          border: 'none',
-          fontSize: 12,
-          letterSpacing: 5,
-          borderRadius: 10,
-          background: !canCrush
-            ? 'rgba(255,255,255,0.05)'
-            : 'linear-gradient(90deg, #c0392b, #e74c3c)',
-          color: !canCrush ? '#2a4a7f' : '#fff',
-          cursor: !canCrush ? 'not-allowed' : 'pointer',
-          boxShadow: !canCrush ? 'none' : '0 4px 24px rgba(239,68,68,0.35)',
-          fontFamily: font,
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          transition: 'opacity 0.15s',
-        }}
-      >
-        {canCrush
-          ? `✦ Crush (${selectedTargets.size}) — ${(selectedTargets.size * crushFee / 1_000_000_000).toFixed(1)} SUI`
-          : 'Select a Target to Crush'}
-      </button>
+      {/* ── FAB: CRUSH BUTTON ── */}
+      <div style={{
+        position: 'fixed',
+        bottom: 75,           // sits above the bottom navbar on mobile
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 50,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 8,
+        width: 'max-content',
+        maxWidth: 'calc(100vw - 32px)',
+        pointerEvents: 'none',
+      }}>
+        {status && (
+          <div style={{
+            fontSize: 10, letterSpacing: 2, padding: '6px 14px',
+            borderRadius: 99, backdropFilter: 'blur(8px)',
+            background: status.startsWith('ERROR')
+              ? 'rgba(239,68,68,0.15)' : 'rgba(74,158,255,0.12)',
+            border: `1px solid ${status.startsWith('ERROR') ? 'rgba(239,68,68,0.3)' : 'rgba(74,158,255,0.25)'}`,
+            color: status.startsWith('ERROR') ? '#ef4444' : '#4a9eff',
+            wordBreak: 'break-all', textAlign: 'center',
+            fontFamily: font, pointerEvents: 'auto',
+          }}>
+            {status}
+          </div>
+        )}
+        <button
+          onClick={crush}
+          disabled={!canCrush}
+          style={{
+            pointerEvents: 'auto',
+            padding: '14px 32px',
+            fontSize: 11,
+            letterSpacing: 4,
+            borderRadius: 99,
+            whiteSpace: 'nowrap',
+            background: !canCrush
+              ? 'rgba(20,30,50,0.85)'
+              : 'linear-gradient(90deg, #c0392b, #e74c3c)',
+            color: !canCrush ? '#2a4a7f' : '#fff',
+            cursor: !canCrush ? 'not-allowed' : 'pointer',
+            boxShadow: !canCrush
+              ? '0 2px 12px rgba(0,0,0,0.4)'
+              : '0 4px 28px rgba(239,68,68,0.50)',
+            fontFamily: font,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            backdropFilter: 'blur(12px)',
+            border: !canCrush
+              ? '1px solid rgba(255,255,255,0.07)'
+              : '1px solid rgba(239,68,68,0.4)',
+            transition: 'box-shadow 0.2s, background 0.2s',
+          }}
+        >
+          {canCrush
+            ? `✦ Crush (${selectedTargets.size}) — ${(selectedTargets.size * crushFee / 1_000_000_000).toFixed(1)} SUI`
+            : '✦ Select a Target'}
+        </button>
+      </div>
 
       {status && (
         <p style={{
