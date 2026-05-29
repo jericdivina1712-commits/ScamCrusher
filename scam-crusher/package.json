@@ -13,6 +13,8 @@
     "@mysten/dapp-kit": "^1.0.6",
     "@mysten/sui": "^2.17.0",
     "@tanstack/react-query": "^5.100.14",
+    "dom-to-image-more": "^3.7.2",
+    "html2canvas": "^1.4.1",
     "react": "^19.2.6",
     "react-custom-roulette": "^1.4.1",
     "react-dom": "^19.2.6"

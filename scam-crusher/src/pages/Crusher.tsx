@@ -20,6 +20,7 @@ type CrusherProps = {
   setNftPage: (fn: (p: number) => number) => void
 
   getImage: (obj: any) => string | null
+  onMockReceipt: () => void
 }
 
 const SUISCAN = 'https://suiscan.xyz/testnet'
@@ -209,7 +210,8 @@ export default function Crusher({
   setObjectPage,
   nftPage,
   setNftPage,
-  getImage
+  getImage,
+  onMockReceipt,
 }: CrusherProps) {
 
   const [showWelcome, setShowWelcome] = useState(() => {
@@ -421,6 +423,27 @@ const nftPageCount = Math.ceil(sortedNFTs.length / 2)
           }}
         >
           {loading ? 'Loading...' : '↻ Load Assets'}
+        </button>
+      </div>
+
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <button
+          onClick={onMockReceipt}
+          style={{
+            border: '1px solid rgba(239,68,68,0.3)',
+            background: 'rgba(239,68,68,0.08)',
+            color: '#ef4444',
+            padding: '10px 32px',
+            fontSize: 10,
+            letterSpacing: 3,
+            cursor: 'pointer',
+            borderRadius: 8,
+            fontFamily: font,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+          }}
+        >
+          🧪 Preview Receipt
         </button>
       </div>
 

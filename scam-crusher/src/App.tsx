@@ -3,6 +3,7 @@ import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@
 import { Transaction } from '@mysten/sui/transactions'
 
 import Navbar from './components/Navbar'
+import CrushReceipt from './components/CrushReceipt'
 import Home from './pages/Home'
 import Crusher from './pages/Crusher'
 import Assets from './pages/Assets'
@@ -42,6 +43,14 @@ export default function App() {
   const [, setBgLoaded] = useState(false)
   const [mintSuccess, setMintSuccess] = useState(false)
   const [lastMintedSerial, setLastMintedSerial] = useState<number | null>(null)
+  const [crushReceipt, setCrushReceipt] = useState<{ totalCrushes: number; pointsGained: number; targetImage: string | null } | null>(null)
+
+  const openMockReceipt = () => setCrushReceipt({
+    totalCrushes: 540,
+    pointsGained: 54,
+    targetImage: null,
+  })
+
   const loadLeaderboard = async () => {
     setLbLoading(true)
     try {
@@ -342,6 +351,16 @@ export default function App() {
       signAndExecute({ transaction: tx }, {
         onSuccess: r => {
           setCrusherStatus(`CRUSHED — all ${nfts.length} NFTs got points — ${r.digest}`)
+          const firstTarget = targetList[0]
+          const pointsGained = nfts.length
+          const currentTotal = nfts.reduce(
+            (s: number, n: any) => s + Number(n.data.content?.fields?.crush_count ?? 0), 0
+          )
+          setCrushReceipt({
+            totalCrushes: currentTotal + pointsGained,
+            pointsGained,
+            targetImage: firstTarget ? getImage(firstTarget) : null,
+          })
           resolve()
         },
         onError: e => {
@@ -421,6 +440,7 @@ export default function App() {
           setNftPage={setNftPage}
 
           getImage={getImage}
+          onMockReceipt={openMockReceipt}
         />
       )}
       {tab === 'assets' && (
@@ -461,6 +481,15 @@ export default function App() {
         />
       )}
       {tab === 'roulette' && <Roulette account={account} />}
+
+      {crushReceipt && (
+        <CrushReceipt
+          totalCrushes={crushReceipt.totalCrushes}
+          pointsGained={crushReceipt.pointsGained}
+          targetImage={crushReceipt.targetImage}
+          onClose={() => setCrushReceipt(null)}
+        />
+      )}
 
       <Navbar tab={tab} setTab={setTab} />
     </div>
