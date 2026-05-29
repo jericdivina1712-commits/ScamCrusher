@@ -40,7 +40,8 @@ export default function App() {
   const [objectPage, setObjectPage] = useState(0)
   const [nftPage, setNftPage] = useState(0)
   const [, setBgLoaded] = useState(false)
-
+  const [mintSuccess, setMintSuccess] = useState(false)
+  const [lastMintedSerial, setLastMintedSerial] = useState<number | null>(null)
   const loadLeaderboard = async () => {
     setLbLoading(true)
     try {
@@ -116,12 +117,14 @@ export default function App() {
       arguments: [kiosk],
     })
     signAndExecute({ transaction: tx }, {
-      onSuccess: async (r: any) => {
-        setCrusherStatus(`CRUSHED — all ${nfts.length} NFTs got points — ${r.digest}`)
+      onSuccess: async () => {
+        console.log('mint success fired, minted:', minted)
         await fetchCollectionInfo()
         setMinting(false)
         loadAssets()
-        setTimeout(() => setCrusherStatus(''), 5000)
+        setMintSuccess(true)
+        setLastMintedSerial(minted + 1)
+        setAssetsStatus('')
       },
       onError: (e: any) => {
         setAssetsStatus('ERROR: ' + e.message)
@@ -436,6 +439,17 @@ export default function App() {
           siteActive={siteActive}
           status={assetsStatus}
           getImage={getImage}
+          mintSuccess={mintSuccess}
+          lastMintedSerial={lastMintedSerial}
+          onDismissMint={() => {
+            setMintSuccess(false)
+            setLastMintedSerial(null)
+            setTab('crusher')
+          }}
+          onStayOnMint={() => {
+            setMintSuccess(false)
+            setLastMintedSerial(null)
+          }}
         />
       )}
       {tab === 'board' && (

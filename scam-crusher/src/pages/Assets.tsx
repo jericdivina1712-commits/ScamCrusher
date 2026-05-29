@@ -1,20 +1,3 @@
-type AssetsProps = {
-  account: any
-  nfts: any[]
-  minted: number
-  maxSupply: number
-  remaining: number
-  poolAmount: number
-  mintPrice: number
-  mintCount: number
-  setMintCount: (fn: (c: number) => number) => void
-  mint: () => void
-  minting: boolean
-  siteActive: boolean
-  status: string
-  getImage: (obj: any) => string | null
-}
-
 import { useState } from 'react'
 
 const ff = 'Georgia, serif'
@@ -32,20 +15,174 @@ const rarityGlow: Record<string, string> = {
   LEGEND: 'rgba(255,215,0,0.3)',
 }
 
+type AssetsProps = {
+  account: any
+  nfts: any[]
+  minted: number
+  maxSupply: number
+  remaining: number
+  poolAmount: number
+  mintPrice: number
+  mintCount: number
+  setMintCount: (fn: (c: number) => number) => void
+  mint: () => void
+  minting: boolean
+  siteActive: boolean
+  status: string
+  getImage: (obj: any) => string | null
+  mintSuccess: boolean
+  lastMintedSerial: number | null
+  onDismissMint: () => void
+  onStayOnMint: () => void
+}
+
 export default function Assets({
   account, nfts, minted, maxSupply, remaining, poolAmount,
   mintPrice, mintCount, setMintCount, mint, minting, siteActive, status, getImage,
+  mintSuccess, lastMintedSerial, onDismissMint, onStayOnMint,
 }: AssetsProps) {
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const isMobile = window.innerWidth < 768
 
-  const supplyPct  = maxSupply > 0 ? Math.round((minted / maxSupply) * 100) : 0
-  const totalCost  = (mintCount * mintPrice / 1_000_000_000).toFixed(2)
-  const priceEach  = (mintPrice / 1_000_000_000).toFixed(2)
-  const soldOut    = remaining === 0
-  const disabled   = minting || soldOut || !siteActive
+  // ── Post-mint full screen takeover ───────────────────────────────
+  if (mintSuccess) {
+    return (
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 999,
+        fontFamily: ff,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden',
+      }}>
+        {/* Background image full bleed */}
+        <img
+          src={isMobile ? '/RaijinBC.jpg' : '/Crusher.jpg'}
+          alt=""
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+            filter: 'brightness(0.35)',
+            zIndex: 0,
+          }}
+        />
 
+        {/* Dark gradient overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: isMobile
+            ? 'radial-gradient(ellipse at center, rgba(5,15,35,0.3) 0%, rgba(5,15,35,0.7) 50%, rgba(5,15,35,0.95) 100%)'
+            : 'linear-gradient(to top, rgba(5,15,35,1) 0%, rgba(5,15,35,0.6) 50%, rgba(5,15,35,0.3) 100%)',
+          zIndex: 1,
+        }} />
+
+        {/* Content */}
+        <div style={{
+          position: 'relative', zIndex: 2,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center',
+          padding: '0 24px',
+          textAlign: 'center',
+          maxWidth: 480,
+          width: '100%',
+        }}>
+
+          {/* Label */}
+          <p style={{
+            fontSize: 10, letterSpacing: '0.5em',
+            color: '#4a9eff', margin: '0 0 16px',
+            textTransform: 'uppercase',
+          }}>
+            Crusher Acquired
+          </p>
+
+          {/* Serial */}
+          <h1 style={{
+            fontSize: isMobile ? 72 : 96,
+            fontWeight: 900, color: '#ffffff',
+            margin: '0 0 16px', lineHeight: 1,
+            letterSpacing: '0.02em',
+          }}>
+            #{String(lastMintedSerial ?? 1).padStart(3, '0')}
+          </h1>
+
+          {/* Rarity badge */}
+          <div style={{
+            display: 'inline-block',
+            fontSize: 11, letterSpacing: '0.35em',
+            color: rarityColor['COMMON'],
+            background: `${rarityColor['COMMON']}18`,
+            border: `0.5px solid ${rarityColor['COMMON']}55`,
+            borderRadius: 20, padding: '6px 20px',
+            marginBottom: 32,
+            boxShadow: `0 0 20px ${rarityGlow['COMMON']}`,
+          }}>
+            COMMON
+          </div>
+
+          {/* Divider */}
+          <div style={{
+            width: 48, height: 0.5,
+            background: 'rgba(74,158,255,0.3)',
+            marginBottom: 24,
+          }} />
+
+          {/* Subtext */}
+          <p style={{
+            fontSize: 14, lineHeight: 1.8,
+            color: '#6a8aaf', margin: '0 0 40px',
+            fontWeight: 300,
+          }}>
+            Your Crusher is live on SUI.<br />
+            Now go earn your rank.
+          </p>
+
+          {/* Primary CTA */}
+          <button
+            onClick={onDismissMint}
+            style={{
+              width: isMobile ? '80%' : '100%',
+              height: isMobile ? 44 : 60,
+              border: 'none', borderRadius: 12,
+              fontSize: isMobile ? 9 : 12, letterSpacing: isMobile ? '0.2em' : '0.35em',
+              fontFamily: ff, fontWeight: 700,
+              cursor: 'pointer',
+              background: 'linear-gradient(90deg, #0b6830, #1aaa55)',
+              color: '#c8ffe0',
+              marginBottom: 16,
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.opacity = '0.88'
+              ;(e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.opacity = '1'
+              ;(e.currentTarget as HTMLButtonElement).style.transform = 'none'
+            }}
+          >
+            CRUSH YOUR FIRST SCAM →
+          </button>
+
+          {/* Secondary exit */}
+          <button
+            onClick={onStayOnMint}
+            style={{
+              background: 'none', border: 'none',
+              color: '#2a4a7f', fontSize: 11,
+              letterSpacing: '0.2em', cursor: 'pointer',
+              fontFamily: ff,
+            }}
+          >
+            STAY HERE
+          </button>
+
+        </div>
+      </div>
+    )
+  }
+
+  // ── No wallet connected ───────────────────────────────────────────
   if (!account) {
     return (
       <div style={{
@@ -65,6 +202,13 @@ export default function Assets({
       </div>
     )
   }
+
+  // ── Derived values (safe to compute here, both early returns are done) ──
+  const supplyPct  = maxSupply > 0 ? Math.round((minted / maxSupply) * 100) : 0
+  const totalCost  = (mintCount * mintPrice / 1_000_000_000).toFixed(2)
+  const priceEach  = (mintPrice / 1_000_000_000).toFixed(2)
+  const soldOut    = remaining === 0
+  const disabled   = minting || soldOut || !siteActive
 
   return (
     <div style={{ fontFamily: ff, color: '#e8f0ff', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflowX: 'hidden', maxWidth: '100vw' }}>
@@ -97,7 +241,6 @@ export default function Assets({
         }}>
           JOIN THE CAUSE — OBLITERATE EVERY SCAM
         </p>
-        {/* decorative divider */}
         <div style={{
           display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 16,
           maxWidth: 400, margin: '18px auto 0',
@@ -165,7 +308,6 @@ export default function Assets({
         {/* Right — Info + mint */}
         <div style={{ flex: 1, minWidth: 280, paddingTop: 6 }}>
 
-          {/* Tag */}
           <div style={{
             display: 'inline-block',
             fontSize: 9, letterSpacing: '0.3em',
@@ -202,14 +344,12 @@ export default function Assets({
             destroy the scammers poisoning the blockchain — one crush at a time.
           </p>
 
-          {/* Price row — MOBILE: smaller, DESKTOP: unchanged */}
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
             <span style={{ fontSize: 10, letterSpacing: '0.3em', color: '#4a6fa5' }}>PRICE</span>
             <span style={{ fontSize: isMobile ? 28 : 42, fontWeight: 700, color: '#ffffff', lineHeight: 1 }}>{priceEach}</span>
             <span style={{ fontSize: isMobile ? 13 : 18, color: '#4a9eff', letterSpacing: '0.1em' }}>SUI</span>
           </div>
 
-          {/* Supply progress */}
           <div style={{ marginBottom: 28 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, letterSpacing: '0.2em', color: '#4a6fa5', marginBottom: 4 }}>
               <span>{minted} / {maxSupply} MINTED</span>
@@ -224,7 +364,6 @@ export default function Assets({
             </div>
           </div>
 
-          {/* Mint counter + button — MOBILE: smaller, DESKTOP: unchanged */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
             <div style={{
               display: 'flex', alignItems: 'center',
@@ -291,11 +430,10 @@ export default function Assets({
               onMouseEnter={e => { if (!disabled) { (e.currentTarget as HTMLButtonElement).style.opacity = '0.88'; (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)' } }}
               onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; (e.currentTarget as HTMLButtonElement).style.transform = 'none' }}
             >
-              {minting ? 'CRUSHING...' : soldOut ? 'SOLD OUT' : `MINT${mintCount > 1 ? ' × ' + mintCount : ''}`}
+              {minting ? 'MINTING...' : soldOut ? 'SOLD OUT' : `MINT${mintCount > 1 ? ' × ' + mintCount : ''}`}
             </button>
           </div>
 
-          {/* Total cost hint */}
           <p style={{ fontSize: 11, color: '#4a6fa5', margin: 0, letterSpacing: '0.12em' }}>
             TOTAL: <span style={{ color: '#7ab3ff' }}>{totalCost} SUI</span>
             <span style={{ marginLeft: 20, color: '#2a4a7f' }}>MAX 10 PER TX</span>
@@ -342,7 +480,7 @@ export default function Assets({
         </div>
       </div>
 
-      {/* ── DRAWER TRIGGER — only shown when user owns crushers ───────── */}
+      {/* ── DRAWER TRIGGER ────────────────────────────────────────────── */}
       {nfts.length > 0 && (
         <button
           onClick={() => setDrawerOpen(true)}
@@ -423,7 +561,6 @@ export default function Assets({
         overflowY: 'auto',
       }}>
 
-        {/* Drawer header */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '80px 24px 20px',
@@ -460,7 +597,6 @@ export default function Assets({
           </button>
         </div>
 
-        {/* NFT grid */}
         <div style={{ padding: '20px 24px 100px' }}>
           <div style={{
             display: 'grid',

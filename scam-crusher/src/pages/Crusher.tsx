@@ -205,15 +205,23 @@ export default function Crusher({
   loading,
   loadAssets,
   status,
-
   objectPage,
   setObjectPage,
-
   nftPage,
   setNftPage,
-
   getImage
 }: CrusherProps) {
+
+  const [showWelcome, setShowWelcome] = useState(() => {
+    return localStorage.getItem('crusher_welcomed') !== 'true'
+  })
+  const isMobile = window.innerWidth < 768
+
+  const dismissWelcome = () => {
+    localStorage.setItem('crusher_welcomed', 'true')
+    setShowWelcome(false)
+  }
+
   if (!account) {
     return (
       <div style={{
@@ -224,6 +232,8 @@ export default function Crusher({
       </div>
     )
   }
+
+  
 
   const totalCrush = nfts.reduce(
   (s: number, n: any) =>
@@ -243,6 +253,137 @@ const nftPageCount = Math.ceil(sortedNFTs.length / 2)
 
   return (
     <>
+
+      {/* ── WELCOME MODAL ── */}
+      {showWelcome && (
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={dismissWelcome}
+            style={{
+              position: 'fixed', inset: 0,
+              background: 'rgba(0,0,0,0.7)',
+              backdropFilter: 'blur(4px)',
+              zIndex: 200,
+            }}
+          />
+
+          {/* Modal wrapper with side padding */}
+          <div style={{
+            position: 'fixed',
+            top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 201,
+            width: '100%',
+            padding: '0 15px',
+            boxSizing: 'border-box' as const,
+            maxWidth: 420,
+          }}>
+
+          {/* Modal card */}
+          <div style={{
+            position: 'fixed',
+            top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 201,
+            width: 'calc(100vw - 30px)',
+            maxWidth: 420,
+            background: 'rgba(8,16,36,0.98)',
+            border: '1px solid rgba(74,158,255,0.2)',
+            borderRadius: 20,
+            padding: '40px 48px 32px',
+            overflow: 'visible',
+            fontFamily: font,
+            boxSizing: 'border-box' as const,
+          }}>
+
+            {/* Top-left image */}
+            <img
+              src="/RaijinBCmoji.png"
+              alt=""
+              style={{
+                position: 'absolute',
+                top: isMobile ? -40 : -86,
+                left: isMobile ? -40 : -105,
+                width: isMobile ? 130 : 230,
+                height: isMobile ? 130 : 230,
+                objectFit: 'contain',
+                opacity: 0.9,
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* Bottom-right image */}
+            <img
+              src="/RaijinBCmojiR.png"
+              alt=""
+              style={{
+                position: 'absolute',
+                bottom: isMobile ? -40 : -55,
+                right: isMobile ? -40 : -90,
+                width: isMobile ? 130 : 180,
+                height: isMobile ? 130 : 180,
+                objectFit: 'contain',
+                opacity: 0.9,
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* Content */}
+            <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+
+              <p style={{
+                fontSize: 9, letterSpacing: '0.45em',
+                color: '#4a9eff', margin: '0 0 12px',
+                textTransform: 'uppercase',
+              }}>
+                Welcome, Crusher
+              </p>
+
+              <h2 style={{
+                fontSize: 22, fontWeight: 800,
+                color: '#ffffff', margin: '0 0 12px',
+                lineHeight: 1.2, letterSpacing: '0.02em',
+              }}>
+                Ready to Obliterate<br />Some Scams?
+              </h2>
+
+              <p style={{
+                fontSize: 13, lineHeight: 1.8,
+                color: '#6a8aaf', margin: '0 0 32px',
+                fontWeight: 300,
+              }}>
+                Pick a scam NFT, hit Crush, and watch your rarity climb. The more you crush, the rarer you become.
+              </p>
+
+              <button
+                onClick={dismissWelcome}
+                style={{
+                  width: '80%',
+                  height: 40,
+                  border: 'none', borderRadius: 10,
+                  fontSize: 10, letterSpacing: '0.35em',
+                  fontFamily: font, fontWeight: 700,
+                  cursor: 'pointer',
+                  background: 'linear-gradient(90deg, #c0392b, #e74c3c)',
+                  color: '#fff',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.opacity = '0.88'
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.opacity = '1'
+                }}
+              >
+                LET'S CRUSH IT →
+              </button>
+
+            </div>
+          </div>
+          </div>{/* end modal wrapper */}
+        </>
+      )}
+
     <style>{`
       @media (max-width: 768px) {
         .targets-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
