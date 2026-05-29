@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 type CrusherProps = {
   account: any
   nfts: any[]
@@ -12,14 +12,12 @@ type CrusherProps = {
   loading: boolean
   loadAssets: () => void
   status: string
-
   objectPage: number
   setObjectPage: (fn: (p: number) => number) => void
-
   nftPage: number
   setNftPage: (fn: (p: number) => number) => void
-
   getImage: (obj: any) => string | null
+  setTab: (tab: 'home' | 'crusher' | 'assets' | 'board' | 'roulette') => void
 }
 
 const SUISCAN = 'https://suiscan.xyz/testnet'
@@ -210,16 +208,27 @@ export default function Crusher({
   nftPage,
   setNftPage,
   getImage,
+  setTab,
 }: CrusherProps) {
 
   const [showWelcome, setShowWelcome] = useState(() => {
     return localStorage.getItem('crusher_welcomed') !== 'true'
   })
+  const [assetsLoaded, setAssetsLoaded] = useState(false)
+  const [activeFilter, setActiveFilter] = useState('All')
+  const [filterOpen, setFilterOpen] = useState(false)
+
+  useEffect(() => {
+    if (!loading && assetsLoaded === false) return
+    if (!loading) setAssetsLoaded(true)
+  }, [loading])
   const isMobile = window.innerWidth < 768
 
   const dismissWelcome = () => {
     localStorage.setItem('crusher_welcomed', 'true')
     setShowWelcome(false)
+    loadAssets()
+    setAssetsLoaded(true)
   }
 
   if (!account) {
@@ -241,7 +250,7 @@ export default function Crusher({
   0
 )
 
-const pageCount = Math.ceil(objects.length / 20)
+
 
 const sortedNFTs = [...nfts].sort(
   (a, b) =>
@@ -390,6 +399,7 @@ const nftPageCount = Math.ceil(sortedNFTs.length / 2)
         .crusher-layout { grid-template-columns: 1fr !important; }
         .crusher-sticky { position: static !important; }
         .crusher-root { padding-top: 16px !important; }
+        .crush-fab { bottom: 75px !important; }
       }
     `}</style>
     <div className="crusher-root" style={{
@@ -405,7 +415,7 @@ const nftPageCount = Math.ceil(sortedNFTs.length / 2)
       {/* Load Assets */}
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
         <button
-          onClick={loadAssets}
+          onClick={() => { loadAssets(); setAssetsLoaded(true) }}
           style={{
             border: '1px solid rgba(74,158,255,0.3)',
             background: 'rgba(74,158,255,0.08)',
@@ -447,10 +457,36 @@ const nftPageCount = Math.ceil(sortedNFTs.length / 2)
           </span>
         </div>
 
-        {nfts.length === 0 && (
+        {nfts.length === 0 && !loading && !assetsLoaded && (
           <p style={{ fontSize: 12, color: '#3a5070', textAlign: 'center', padding: '24px 0' }}>
             No NFTs found. Load assets first.
           </p>
+        )}
+
+        {nfts.length === 0 && !loading && assetsLoaded && (
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <p style={{ fontSize: 12, color: '#5a7399', marginBottom: 16 }}>
+              You don't have a Crusher NFT yet.
+            </p>
+            <button
+              onClick={() => setTab('assets')}
+              style={{
+                border: 'none',
+                borderRadius: 8,
+                background: 'linear-gradient(90deg, #c0392b, #e74c3c)',
+                color: '#fff',
+                padding: '10px 28px',
+                fontSize: 10,
+                letterSpacing: 3,
+                cursor: 'pointer',
+                fontFamily: font,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+              }}
+            >
+              Mint Now →
+            </button>
+          </div>
         )}
 
         {sortedNFTs.length > 2 && (
@@ -561,73 +597,162 @@ const nftPageCount = Math.ceil(sortedNFTs.length / 2)
           )}
         </div>
 
-        {/* Pagination */}
-        {objects.length > 20 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, justifyContent: 'center' }}>
-            <button
-              onClick={() => setObjectPage(p => Math.max(0, p - 1))}
-              disabled={objectPage === 0}
-              style={{
-                padding: '5px 14px', background: 'rgba(255,255,255,0.05)',
-                color: objectPage === 0 ? '#2a4a7f' : '#7ab3ff',
-                border: '1px solid rgba(255,255,255,0.10)', cursor: objectPage === 0 ? 'not-allowed' : 'pointer',
-                borderRadius: 6, fontFamily: font, fontSize: 12,
-              }}
-            >{'‹'}</button>
-            <span style={{ fontSize: 10, color: '#5a7399', letterSpacing: 1 }}>
-              {objectPage * 20 + 1}–{Math.min(objectPage * 20 + 20, objects.length)} / {objects.length}
-            </span>
-            <button
-              onClick={() => setObjectPage(p => Math.min(pageCount - 1, p + 1))}
-              disabled={objectPage >= pageCount - 1}
-              style={{
-                padding: '5px 14px', background: 'rgba(255,255,255,0.05)',
-                color: objectPage >= pageCount - 1 ? '#2a4a7f' : '#7ab3ff',
-                border: '1px solid rgba(255,255,255,0.10)', cursor: objectPage >= pageCount - 1 ? 'not-allowed' : 'pointer',
-                borderRadius: 6, fontFamily: font, fontSize: 12,
-              }}
-            >{'›'}</button>
-          </div>
-        )}
+        {/* Pagination + Filter pills */}
+        {objects.length > 0 && (() => {
+          const typeNames = ['All', ...Array.from(new Set(objects.map(o => {
+            const parts = (o.data?.type ?? '').split('::')
+            return parts[parts.length - 1] || 'Unknown'
+          })))]
+          const filteredObjects = activeFilter === 'All'
+            ? objects
+            : objects.filter(o => {
+                const parts = (o.data?.type ?? '').split('::')
+                return (parts[parts.length - 1] || 'Unknown') === activeFilter
+              })
+          const filteredPageCount = Math.ceil(filteredObjects.length / 20)
 
-        {objects.length === 0 && (
-          <p style={{ fontSize: 12, color: '#3a5070', textAlign: 'center', padding: '24px 0' }}>
-            No targets found.
-          </p>
-        )}
+          return (
+            <>
+              <div style={{
+                display: 'flex', alignItems: 'center',
+                marginBottom: 14,
+                justifyContent: 'space-between',
+                position: 'relative',
+              }}>
+                {/* Pagination group — absolutely centered */}
+                <div style={{
+                  position: 'absolute', left: '50%',
+                  transform: 'translateX(-50%)',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}>
+                  <button
+                    onClick={() => setObjectPage(p => Math.max(0, p - 1))}
+                    disabled={objectPage === 0}
+                    style={{
+                      padding: '5px 12px', background: 'rgba(255,255,255,0.05)',
+                      color: objectPage === 0 ? '#2a4a7f' : '#7ab3ff',
+                      border: '1px solid rgba(255,255,255,0.10)', cursor: objectPage === 0 ? 'not-allowed' : 'pointer',
+                      borderRadius: 6, fontFamily: font, fontSize: 12,
+                    }}
+                  >{'‹'}</button>
+                  <span style={{ fontSize: 10, color: '#5a7399', letterSpacing: 1 }}>
+                    {objectPage * 20 + 1}–{Math.min(objectPage * 20 + 20, filteredObjects.length)} / {filteredObjects.length}
+                  </span>
+                  <button
+                    onClick={() => setObjectPage(p => Math.min(filteredPageCount - 1, p + 1))}
+                    disabled={objectPage >= filteredPageCount - 1}
+                    style={{
+                      padding: '5px 12px', background: 'rgba(255,255,255,0.05)',
+                      color: objectPage >= filteredPageCount - 1 ? '#2a4a7f' : '#7ab3ff',
+                      border: '1px solid rgba(255,255,255,0.10)', cursor: objectPage >= filteredPageCount - 1 ? 'not-allowed' : 'pointer',
+                      borderRadius: 6, fontFamily: font, fontSize: 12,
+                    }}
+                  >{'›'}</button>
+                </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 12 }} className="targets-grid">
-          {objects.slice(objectPage * 20, objectPage * 20 + 20).map((o: any) => {
-            const selected = selectedTargets.has(o.data.objectId)
-            const typeName = o.data.type?.split('::').pop() ?? 'Object'
-            const shortId = o.data.objectId.slice(0, 6) + '...' + o.data.objectId.slice(-4)
-            return (
-              <NFTCard
-                key={o.data.objectId}
-                image={getImage(o)}
-                name={typeName}
-                subLabel={shortId}
-                chips={[
-                  { label: typeName, style: 'type' },
-                ]}
-                selected={selected}
-                selectedColor="#ef4444"
-                selectedGlow="rgba(239,68,68,0.20)"
-                objectId={o.data.objectId}
-                onClick={() => toggleTarget(o.data.objectId)}
-                placeholder="🎯"
-              />
-            )
-          })}
-        </div>
+                {/* Filter dropdown */}
+                <div style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => setFilterOpen(p => !p)}
+                    style={{
+                      padding: '5px 12px', borderRadius: 6, fontSize: 9,
+                      fontWeight: 700, letterSpacing: 1, cursor: 'pointer',
+                      fontFamily: font, textTransform: 'uppercase',
+                      border: activeFilter !== 'All'
+                        ? '1px solid rgba(239,68,68,0.5)'
+                        : '1px solid rgba(255,255,255,0.10)',
+                      background: activeFilter !== 'All'
+                        ? 'rgba(239,68,68,0.12)'
+                        : 'rgba(255,255,255,0.05)',
+                      color: activeFilter !== 'All' ? '#ef4444' : '#7ab3ff',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                    }}
+                  >
+                    {activeFilter === 'All' ? 'Filter' : activeFilter} ▾
+                  </button>
+
+                  {filterOpen && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '110%', left: 0,
+                      background: '#0d1829',
+                      border: '1px solid rgba(255,255,255,0.10)',
+                      borderRadius: 8,
+                      zIndex: 50,
+                      minWidth: 160,
+                      overflow: 'hidden',
+                    }}>
+                      {typeNames.map(name => (
+                        <div
+                          key={name}
+                          onClick={() => {
+                            setActiveFilter(name)
+                            setObjectPage(() => 0)
+                            setFilterOpen(false)
+                          }}
+                          style={{
+                            padding: '9px 14px',
+                            fontSize: 10, fontWeight: 700,
+                            letterSpacing: 1, cursor: 'pointer',
+                            fontFamily: font, textTransform: 'uppercase',
+                            color: activeFilter === name ? '#ef4444' : '#8aafcc',
+                            background: activeFilter === name
+                              ? 'rgba(239,68,68,0.10)'
+                              : 'transparent',
+                            borderBottom: '1px solid rgba(255,255,255,0.05)',
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = activeFilter === name ? 'rgba(239,68,68,0.10)' : 'transparent')}
+                        >
+                          {name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+        {filteredObjects.length === 0 && (
+                <p style={{ fontSize: 12, color: '#3a5070', textAlign: 'center', padding: '24px 0' }}>
+                  No targets found.
+                </p>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 12 }} className="targets-grid">
+                {filteredObjects.slice(objectPage * 20, objectPage * 20 + 20).map((o: any) => {
+                  const selected = selectedTargets.has(o.data.objectId)
+                  const typeName = o.data.type?.split('::').pop() ?? 'Object'
+                  const shortId = o.data.objectId.slice(0, 6) + '...' + o.data.objectId.slice(-4)
+                  return (
+                    <NFTCard
+                      key={o.data.objectId}
+                      image={getImage(o)}
+                      name={typeName}
+                      subLabel={shortId}
+                      chips={[
+                        { label: typeName, style: 'type' },
+                      ]}
+                      selected={selected}
+                      selectedColor="#ef4444"
+                      selectedGlow="rgba(239,68,68,0.20)"
+                      objectId={o.data.objectId}
+                      onClick={() => toggleTarget(o.data.objectId)}
+                      placeholder="🎯"
+                    />
+                  )
+                })}
+              </div>
+            </>
+          )
+        })()}
       </div>
 
       </div>{/* end two-col grid */}
 
       {/* ── FAB: CRUSH BUTTON ── */}
-      <div style={{
+      <div className="crush-fab" style={{
         position: 'fixed',
-        bottom: 75,           // sits above the bottom navbar on mobile
+        bottom: 20,
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 50,

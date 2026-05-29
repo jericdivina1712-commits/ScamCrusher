@@ -45,11 +45,7 @@ export default function App() {
   const [lastMintedSerial, setLastMintedSerial] = useState<number | null>(null)
   const [crushReceipt, setCrushReceipt] = useState<{ totalCrushes: number; pointsGained: number; targetImage: string | null } | null>(null)
 
-  const openMockReceipt = () => setCrushReceipt({
-    totalCrushes: 540,
-    pointsGained: 54,
-    targetImage: null,
-  })
+
 
   const loadLeaderboard = async () => {
     setLbLoading(true)
@@ -351,6 +347,7 @@ export default function App() {
       signAndExecute({ transaction: tx }, {
         onSuccess: r => {
           setCrusherStatus(`CRUSHED — all ${nfts.length} NFTs got points — ${r.digest}`)
+          setTimeout(() => setCrusherStatus(''), 4000)
           const firstTarget = targetList[0]
           const pointsGained = nfts.length
           const currentTotal = nfts.reduce(
@@ -361,6 +358,8 @@ export default function App() {
             pointsGained,
             targetImage: firstTarget ? getImage(firstTarget) : null,
           })
+          setObjects(prev => prev.filter(o => !selectedTargets.has(o.data.objectId)))
+          setSelectedTargets(new Set())
           resolve()
         },
         onError: e => {
@@ -440,7 +439,7 @@ export default function App() {
           setNftPage={setNftPage}
 
           getImage={getImage}
-          onMockReceipt={openMockReceipt}
+          setTab={setTab}
         />
       )}
       {tab === 'assets' && (

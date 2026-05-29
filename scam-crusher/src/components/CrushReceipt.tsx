@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import domtoimage from 'dom-to-image-more'
+import templates from '../data/crushTemplates.json'
 
 const font = "'DM Sans', 'Syne', system-ui, sans-serif"
 
@@ -331,11 +332,14 @@ export default function CrushReceipt({ totalCrushes, pointsGained, targetImage, 
                 a.download = `crush-receipt-${totalCrushes}.png`
                 a.click()
               }
+              const pool = templates.templates
+              const picked = pool[Math.floor(Math.random() * pool.length)]
               const text = encodeURIComponent(
-                `I just crushed a scam on Scam Crusher 🔥\n${totalCrushes} total crushes (+${pointsGained} this crush)\n\nJoin the cause →`
+                picked.text
+                  .replace('{totalCrushes}', String(totalCrushes))
+                  .replace('{pointsGained}', String(pointsGained))
               )
-              const url = encodeURIComponent('https://scam-crusher.vercel.app')
-              window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank')
+              window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank')
             }}
             disabled={capturing}
             style={{
